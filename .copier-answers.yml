@@ -1,0 +1,19 @@
+# Changes here will be overwritten by Copier
+_commit: v1.0.0
+_src_path: git@github.com:getindata/python-opensource-template.git
+authors:
+- GetInData MLOPS <mlops@getindata.com>
+description: Kedro plugin with Snowflake / Snowpark support
+docs_url: https://kedro-snowflake.readthedocs.io/
+full_name: Kedro Snowflake plugin
+github_url: https://github.com/getindata/kedro-snowflake
+initial_version: 0.0.0
+keywords:
+- kedro
+- snowflake
+- snowpark
+- mlops
+maintainers:
+- GetInData MLOPS <mlops@getindata.com>
+module_name: kedro_snowflake
+short_name: kedro-snowflake
