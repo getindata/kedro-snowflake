@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kedro-snowflake"
-version = "0.0.0"
+version = "0.0.1"
 description = "Kedro plugin with Snowflake / Snowpark support"
 readme = "README.md"
 authors = ['GetInData MLOPS <mlops@getindata.com>']
