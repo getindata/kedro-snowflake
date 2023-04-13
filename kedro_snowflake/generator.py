@@ -4,6 +4,7 @@ import os
 import re
 import tempfile
 from collections import defaultdict
+from functools import cached_property
 from pathlib import Path
 from typing import Any, Dict, Optional, List
 from uuid import uuid4
@@ -45,6 +46,11 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{self._r
         extra_params: Optional[str] = None,
         extra_env: Dict[str, str] = None,
     ):
+        assert all(
+            k in connection_parameters
+            for k in ("account", "user", "password", "warehouse", "database", "schema")
+        ), "Missing one or more connection parameters"
+
         self.connection_parameters = connection_parameters
         self.kedro_environment = kedro_environment
 
@@ -57,7 +63,6 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{self._r
     def _generate_task_sql(
         self,
         task_name: str,
-        warehouse: str,
         after_tasks: List[str],
         pipeline_name: str,
         nodes_to_run: List[str],
@@ -66,7 +71,7 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{self._r
     ):
         return self.TASK_TEMPLATE.format(
             task_name=task_name,
-            warehouse=warehouse,
+            warehouse=self.connection_parameters["warehouse"],
             after_tasks=",".join(after_tasks),
             task_body=self.TASK_BODY_TEMPLATE.format(
                 root_task_name=root_task_name,
@@ -78,15 +83,18 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{self._r
             ),
         )
 
-    def _generate_root_task_sql(self, task_name: str, warehouse: str):
+    def _generate_root_task_sql(self):
         return """
 create or replace task {task_name}
 warehouse = '{warehouse}'
-schedule = '11520 minute'
+schedule = '{schedule}'
 as
-call kedro_start_run();
+call {root_sproc}();
 """.strip().format(
-            task_name=task_name, warehouse=warehouse
+            task_name=self._root_task_name,
+            warehouse=self.connection_parameters["warehouse"],
+            root_sproc=self._root_sproc_name,
+            schedule=self.config.snowflake.runtime.schedule,
         )
 
     def _sanitize_node_name(self, node_name: str) -> str:
@@ -95,16 +103,9 @@ call kedro_start_run();
     def _generate_snowflake_tasks_sql(
         self,
         pipeline: Pipeline,
-        connection_parameters: dict,
-        extra_params: Optional[dict] = None,
     ) -> List[str]:
-        sql_statements = [
-            self._generate_root_task_sql(
-                self._root_task_name, connection_parameters["warehouse"]
-            )
-        ]
+        sql_statements = [self._generate_root_task_sql()]
 
-        extra_params_serialized = json.dumps(extra_params) if extra_params else None
         node_dependencies = (
             pipeline.node_dependencies
         )  # <-- this one is not topological
@@ -115,12 +116,11 @@ call kedro_start_run();
             sql_statements.append(
                 self._generate_task_sql(
                     self._sanitize_node_name(node.name),
-                    connection_parameters["warehouse"],
                     after_tasks,
                     self.pipeline_name,
                     [node.name],
                     self._root_task_name,
-                    extra_params_serialized,
+                    self.extra_params,
                 )
             )
         return sql_statements
@@ -134,8 +134,12 @@ call kedro_start_run();
 
     @property
     def _root_task_name(self):
-        root_task_name = f"kedro_snowflake_start_{self.pipeline_name}".upper()
+        root_task_name = f"kedro_snowflake_start_{self.pipeline_name}_task".upper()
         return root_task_name
+
+    @property
+    def _root_sproc_name(self):
+        return f"kedro_snowflake_start_{self.pipeline_name}".upper()
 
     def generate(self) -> KedroSnowflakePipeline:
         """Generate a SnowflakePipeline object from a Kedro pipeline.
@@ -146,33 +150,13 @@ call kedro_start_run();
         pipeline = self.get_kedro_pipeline()
 
         logger.info(f"Translating {self.pipeline_name} to Snowflake Pipeline")
-        connection_parameters = {
-            "account": "lgtbfsp-al93875",
-            "user": "marrrcin",
-            "password": os.environ["SNOWFLAKE_PASSWORD"],
-            #     "role": "",
-            "warehouse": "DEFAULT",
-            "database": "kedro",
-            "schema": "public",
-        }
-
-        assert all(
-            k in connection_parameters
-            for k in ("account", "user", "password", "warehouse", "database", "schema")
-        ), "Missing one or more connection parameters"
 
         snowflake_stage_name = self.config.snowflake.runtime.stage
         snowflake_temp_data_stage = self.config.snowflake.runtime.temporary_stage
-        session = Session.builder.configs(connection_parameters).create()
-        # Enforce clean stage
-        session.sql(
-            f"drop stage if exists {snowflake_stage_name.lstrip('@')};"
-        ).collect()
-        session.sql(f"create stage {snowflake_stage_name.lstrip('@')};").collect()
-        session.sql(
-            f"create stage if not exists {snowflake_temp_data_stage.lstrip('@')};"
-        ).collect()
-        # TODO - groups
+        session = self.snowflake_session
+        self._drop_and_recreate_stages(snowflake_stage_name, snowflake_temp_data_stage)
+
+        # TODO - groups -> nodes operating on sp.DataFrames could be merged (or use Kedro tags)
         with tempfile.TemporaryDirectory() as tmp_dir_str:
             tmp_dir = Path(tmp_dir_str)
             dependencies_dir = tmp_dir / "dependencies"
@@ -181,40 +165,11 @@ call kedro_start_run();
             project_files_dir = tmp_dir / "project"
             project_files_dir.mkdir()
 
-            # Package dependencies, without Kedro and Omegaconf (Kedro needs to be imported manually within sproc)
-            zip_dependencies(
-                [
-                    "toposort",
-                ],
-                dependencies_dir,
-            )
-
-            # Special packages
-            special_packages = [
-                "kedro",
-                "kedro_datasets",
-                "omegaconf",
-                "antlr4",
-                "dynaconf",
-                "anyconfig",
-            ]
-            for sp in special_packages:
-                zstd_folder(
-                    get_module_path(sp),
-                    project_files_dir,
-                    file_name=f"{sp}.tar.zst",
-                    exclude=[".pyc", "__pycache__"],
-                )
+            # Package dependencies, based on config + hardcoded libs
+            self._package_dependencies(dependencies_dir, project_files_dir)
 
             # Package this project
-            # TODO - handle ignoring some files (data etc)
-            project_package_name = f"{self.pipeline_name}.tar.zst"
-            project_package_path = zstd_folder(
-                Path.cwd(),
-                project_files_dir,
-                file_name=project_package_name,
-                exclude=[".pyc", "__pycache__"],
-            )
+            self._package_kedro_project(project_files_dir)
 
             # Stage the packages - upload to Snowflake
             logger.info("Uploading dependencies to Snowflake")
@@ -236,46 +191,72 @@ call kedro_start_run();
                 parallel=8,
             )
 
-            imports_for_sproc = [
-                f"{snowflake_stage_name}/{f.name}"
-                for f in dependencies_dir.glob("*")
-                if f.is_file()
-            ]
-
-            logger.info("Creating Kedro Snowflake Root Sproc")
+            logger.info("Creating Kedro Snowflake root sproc")
             self._construct_kedro_snowflake_root_sproc(session, snowflake_stage_name)
 
             logger.info("Creating Kedro Snowflake Sproc")
             snowflake_sproc = self._construct_kedro_snowflake_sproc(
-                session,
-                imports_for_sproc,
-                [
-                    "snowflake-snowpark-python",
-                    "cachetools",
-                    "pluggy",
-                    "PyYAML==6.0",
-                    "jmespath",
-                    "click",
-                    "importlib_resources",
-                    "toml",
-                    "rich",
-                    "pathlib",
-                    "fsspec",
-                    "scikit-learn",
-                    "pandas",
-                    "zstandard",
-                    "more-itertools",
-                    "openpyxl",
-                    "backoff",
-                ],
-                snowflake_stage_name,
-                snowflake_temp_data_stage,
+                imports=self._generate_imports_for_sproc(
+                    dependencies_dir, snowflake_stage_name
+                ),
+                packages=self.config.snowflake.runtime.dependencies.packages,
+                stage_location=snowflake_stage_name,
+                temp_data_stage=snowflake_temp_data_stage,
             )
+
             logger.info(snowflake_sproc)
-            pipeline_sql_statements = self._generate_snowflake_tasks_sql(
-                pipeline, connection_parameters, extra_params=None
+            pipeline_sql_statements = self._generate_snowflake_tasks_sql(pipeline)
+            return KedroSnowflakePipeline(
+                session, pipeline_sql_statements, self._generate_task_execute_sql()
             )
-            return pipeline_sql_statements
+
+    def _generate_imports_for_sproc(self, dependencies_dir, snowflake_stage_name):
+        imports_for_sproc = [
+            f"{snowflake_stage_name}/{f.name}"
+            for f in dependencies_dir.glob("*")
+            if f.is_file()
+        ]
+        return imports_for_sproc
+
+    def _package_kedro_project(self, project_files_dir):
+        # TODO - handle ignoring some files (data etc)
+        project_package_name = f"{self.pipeline_name}.tar.zst"
+        zstd_folder(
+            Path.cwd(),
+            project_files_dir,
+            file_name=project_package_name,
+            exclude=[".pyc", "__pycache__"],
+        )
+
+    def _package_dependencies(self, dependencies_dir, project_files_dir):
+        # Package dependencies that work with Snowpark's import
+        zip_dependencies(
+            [
+                "toposort",
+            ],
+            dependencies_dir,
+        )
+        # Special packages that need to be extracted into PYTHONPATH at runtime (imports don't work)
+        special_packages = self.config.snowflake.runtime.dependencies.imports
+        for sp in special_packages:
+            zstd_folder(
+                get_module_path(sp),
+                project_files_dir,
+                file_name=f"{sp}.tar.zst",
+                exclude=[".pyc", "__pycache__"],
+            )
+
+    def _drop_and_recreate_stages(self, *stages):
+        # Enforce clean stage
+        for s in stages:
+            self.snowflake_session.sql(
+                f"drop stage if exists {s.lstrip('@')};"
+            ).collect()
+            self.snowflake_session.sql(f"create stage {s.lstrip('@')};").collect()
+
+    @cached_property
+    def snowflake_session(self):
+        return Session.builder.configs(self.connection_parameters).create()
 
     def _group_nodes(self, pipeline: Pipeline) -> Dict[str, List[Node]]:
         # no grouping right now, for future use
@@ -297,7 +278,7 @@ call kedro_start_run();
 
         return sproc(
             func=kedro_start_run,
-            name="kedro_start_run",
+            name=self._root_task_name,
             is_permanent=True,
             replace=True,
             stage_location=stage_location,
@@ -308,7 +289,6 @@ call kedro_start_run();
 
     def _construct_kedro_snowflake_sproc(
         self,
-        session,
         imports: List[str],
         packages: List[str],
         stage_location: str,
@@ -334,8 +314,9 @@ call kedro_start_run();
             from pathlib import Path
             from time import monotonic
 
-            IMPORT_DIRECTORY_NAME = "snowflake_import_directory"
-            import_dir = sys._xoptions[IMPORT_DIRECTORY_NAME]
+            # This might be useful in near future ;)
+            # IMPORT_DIRECTORY_NAME = "snowflake_import_directory"
+            # import_dir = sys._xoptions[IMPORT_DIRECTORY_NAME]
 
             execution_data = {
                 "environment": environment,
@@ -412,7 +393,7 @@ call kedro_start_run();
             imports=imports,
             packages=packages,
             execute_as="caller",
-            session=session,
+            session=self.snowflake_session,
         )
         return node_sproc
 

@@ -39,14 +39,6 @@ class SnowflakeConnectionConfig(BaseModel):
         return values
 
 
-class SnowflakeRuntimeConfig(BaseModel):
-    dependencies: DependenciesConfig
-    stage: str = "@KEDRO_SNOWFLAKE_STAGE"
-    temporary_stage: str = "@KEDRO_SNOWFLAKE_TEMP_DATA_STAGE"
-    schedule: str = "11520 minute"
-    stored_procedure_name_suffix: Optional[str] = ""
-
-
 class DependenciesConfig(BaseModel):
     packages: List[str] = [
         "snowflake-snowpark-python",
@@ -76,6 +68,14 @@ class DependenciesConfig(BaseModel):
         "dynaconf",
         "anyconfig",
     ]
+
+
+class SnowflakeRuntimeConfig(BaseModel):
+    dependencies: DependenciesConfig
+    stage: str = "@KEDRO_SNOWFLAKE_STAGE"
+    temporary_stage: str = "@KEDRO_SNOWFLAKE_TEMP_DATA_STAGE"
+    schedule: str = "11520 minute"
+    stored_procedure_name_suffix: Optional[str] = ""
 
 
 class SnowflakeConfig(BaseModel):
