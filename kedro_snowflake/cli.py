@@ -121,7 +121,7 @@ def run(
     output: str,
     env_var: Tuple[str],
 ):
-    """Creates Snowflake tasks SQL (! it also creates stored procedures in Snowflake!)"""
+    """Runs the pipeline using Snowflake Tasks"""
     params = json.dumps(p) if (p := parse_extra_params(params)) else ""
     extra_env = parse_extra_env_params(env_var)
 
