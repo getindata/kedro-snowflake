@@ -1,88 +1,25 @@
-import importlib
 import json
 import logging
 import os
 import re
-import shutil
-import tarfile
 import tempfile
-import zipfile
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Optional, List
 from uuid import uuid4
 
-import zstandard as zstd
 from kedro.pipeline import Pipeline
 from kedro.pipeline.node import Node
 from snowflake.snowpark.functions import sproc
 from snowflake.snowpark.session import Session
 
+from kedro_snowflake.config import KedroSnowflakeConfig
+from kedro_snowflake.misc import KedroSnowflakePipeline
+from kedro_snowflake.utils import zstd_folder, zip_dependencies, get_module_path
+
 logger = logging.getLogger(__name__)
 
 PARAMS_PREFIX = "params:"
-
-
-def zstd_folder(
-    folder_to_compress: Path,
-    output_dir: Path,
-    file_name: Optional[str] = None,
-    level=5,
-    exclude=None,
-) -> Path:
-    """Compress a folder using zstandard and return the path to the archive."""
-    tar_path = output_dir / (file_name or (uuid4().hex + ".tar.zst"))
-    with zstd.open(tar_path, "wb", cctx=zstd.ZstdCompressor(level=level)) as archive:
-        with tarfile.open(fileobj=archive, mode="w") as tar:
-
-            def filter_fn(tarinfo):
-                if any(
-                    [tarinfo.name.endswith(excluded) for excluded in (exclude or [])]
-                ):
-                    return None
-                else:
-                    return tarinfo
-
-            tar.add(
-                folder_to_compress, arcname=folder_to_compress.name, filter=filter_fn
-            )
-    return tar_path
-
-
-def zip_dependencies(dependencies: List[str], output_dir: Path):
-    assert output_dir.is_dir(), f"{output_dir} is not a directory"
-
-    results = {dependency: get_module_path(dependency) for dependency in dependencies}
-
-    # compress the dependencies as zip
-    for dependency, path in results.items():
-        if path.is_dir():
-            compress_folder_to_zip(
-                path, output_dir / f"{dependency}.zip", [".pyc", "__pycache__"]
-            )
-        else:
-            shutil.copyfile(path, output_dir / path.name)
-
-
-def get_module_path(module_name) -> Path:
-    module = importlib.import_module(module_name)
-    try:
-        path = module.__path__[0]
-    except AttributeError:
-        path = module.__file__
-    return Path(path)
-
-
-def compress_folder_to_zip(path, zip_path, exclude=None):
-    exclude = exclude or []
-    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_STORED) as zip_file:
-        for root, dirs, files in os.walk(path):
-            for file in files:
-                if not any(file.endswith(pattern) for pattern in exclude):
-                    file_path = os.path.join(root, file)
-                    zip_file.write(file_path, arcname=os.path.relpath(file_path, path))
-        # add the top-level folder to the archive
-        zip_file.write(path, arcname=os.path.basename(path))
 
 
 class SnowflakePipelineGenerator:
@@ -95,21 +32,21 @@ as
 {task_body};
 """.strip()
     TASK_BODY_TEMPLATE = """
-call {sproc_name}('{environment}', system$get_predecessor_return_value('{root_task_name}'), '{pipeline_name}', ARRAY_CONSTRUCT({nodes_to_run}), '{extra_params}')
+call {sproc_name}('{environment}', system$get_predecessor_return_value('{self._root_task_name}'), '{pipeline_name}', ARRAY_CONSTRUCT({nodes_to_run}), '{extra_params}')
 """.strip()
 
     def __init__(
         self,
         pipeline_name: str,
         kedro_environment: str,
-        config: Any,
+        config: KedroSnowflakeConfig,
         kedro_params: Dict[str, Any],
-        params: Optional[str] = None,
+        extra_params: Optional[str] = None,
         extra_env: Dict[str, str] = None,
     ):
         self.kedro_environment = kedro_environment
 
-        self.params = params
+        self.extra_params = extra_params
         self.kedro_params = kedro_params
         self.config = config
         self.pipeline_name = pipeline_name
@@ -159,10 +96,9 @@ call kedro_start_run();
         connection_parameters: dict,
         extra_params: Optional[dict] = None,
     ) -> List[str]:
-        root_task_name = "kedro_snowflake_start_run".upper()
         sql_statements = [
             self._generate_root_task_sql(
-                root_task_name, connection_parameters["warehouse"]
+                self._root_task_name, connection_parameters["warehouse"]
             )
         ]
 
@@ -171,7 +107,7 @@ call kedro_start_run();
             pipeline.node_dependencies
         )  # <-- this one is not topological
         for node in pipeline.nodes:  # <-- this one is topological
-            after_tasks = [root_task_name] + [
+            after_tasks = [self._root_task_name] + [
                 self._sanitize_node_name(n.name) for n in node_dependencies[node]
             ]
             sql_statements.append(
@@ -181,23 +117,31 @@ call kedro_start_run();
                     after_tasks,
                     self.pipeline_name,
                     [node.name],
-                    root_task_name,
+                    self._root_task_name,
                     extra_params_serialized,
                 )
             )
-
-        sql_statements.extend(
-            [
-                f"call SYSTEM$TASK_DEPENDENTS_ENABLE( '{root_task_name}' );",
-                f"alter task {root_task_name} resume;",
-                f"execute task {root_task_name};",
-            ]
-        )
         return sql_statements
 
-    def generate(self):
+    def _generate_task_execute_sql(self):
+        return [
+            f"call SYSTEM$TASK_DEPENDENTS_ENABLE( '{self._root_task_name}' );",
+            f"alter task {self._root_task_name} resume;",
+            f"execute task {self._root_task_name};",
+        ]
+
+    @property
+    def _root_task_name(self):
+        root_task_name = f"kedro_snowflake_start_{self.pipeline_name}".upper()
+        return root_task_name
+
+    def generate(self) -> KedroSnowflakePipeline:
+        """Generate a SnowflakePipeline object from a Kedro pipeline.
+        It can be used to run the pipeline or just to get the SQL statements.
+        Note that the pipeline is not executed, it is just translated to SQL statements, but the stored procedures ARE created.
+        """
+
         pipeline = self.get_kedro_pipeline()
-        synthetic_run_id = uuid4().hex
 
         logger.info(f"Translating {self.pipeline_name} to Snowflake Pipeline")
         connection_parameters = {
@@ -210,16 +154,21 @@ call kedro_start_run();
             "schema": "public",
         }
 
-        SNOWFLAKE_STAGE_NAME = "@KEDRO_SNOWFLAKE_STAGE"
-        SNOWFLAKE_TEMP_DATA_STAGE = "@KEDRO_SNOWFLAKE_TEMP_DATA_STAGE"
+        assert all(
+            k in connection_parameters
+            for k in ("account", "user", "password", "warehouse", "database", "schema")
+        ), "Missing one or more connection parameters"
+
+        snowflake_stage_name = self.config.snowflake.runtime.stage
+        snowflake_temp_data_stage = self.config.snowflake.runtime.temporary_stage
         session = Session.builder.configs(connection_parameters).create()
         # Enforce clean stage
         session.sql(
-            f"drop stage if exists {SNOWFLAKE_STAGE_NAME.lstrip('@')};"
+            f"drop stage if exists {snowflake_stage_name.lstrip('@')};"
         ).collect()
-        session.sql(f"create stage {SNOWFLAKE_STAGE_NAME.lstrip('@')};").collect()
+        session.sql(f"create stage {snowflake_stage_name.lstrip('@')};").collect()
         session.sql(
-            f"create stage if not exists {SNOWFLAKE_TEMP_DATA_STAGE.lstrip('@')};"
+            f"create stage if not exists {snowflake_temp_data_stage.lstrip('@')};"
         ).collect()
         # TODO - groups
         with tempfile.TemporaryDirectory() as tmp_dir_str:
@@ -266,35 +215,35 @@ call kedro_start_run();
             )
 
             # Stage the packages - upload to Snowflake
-            print("Uploading dependencies to Snowflake")
+            logger.info("Uploading dependencies to Snowflake")
             session.file.put(
                 str(dependencies_dir / "*"),
-                SNOWFLAKE_STAGE_NAME,
+                snowflake_stage_name,
                 overwrite=True,
                 auto_compress=False,
                 parallel=8,
             )
 
             # Stage Kedro and this project
-            print("Uploading project files & special dependencies to Snowflake")
+            logger.info("Uploading project files & special dependencies to Snowflake")
             session.file.put(
                 str(project_files_dir / "*"),
-                f"{SNOWFLAKE_STAGE_NAME}/project",
+                f"{snowflake_stage_name}/project",
                 overwrite=True,
                 auto_compress=False,
                 parallel=8,
             )
 
             imports_for_sproc = [
-                f"{SNOWFLAKE_STAGE_NAME}/{f.name}"
+                f"{snowflake_stage_name}/{f.name}"
                 for f in dependencies_dir.glob("*")
                 if f.is_file()
             ]
 
-            print("Creating Kedro Snowflake Root Sproc")
-            self._construct_kedro_snowflake_root_sproc(session, SNOWFLAKE_STAGE_NAME)
+            logger.info("Creating Kedro Snowflake Root Sproc")
+            self._construct_kedro_snowflake_root_sproc(session, snowflake_stage_name)
 
-            print("Creating Kedro Snowflake Sproc")
+            logger.info("Creating Kedro Snowflake Sproc")
             snowflake_sproc = self._construct_kedro_snowflake_sproc(
                 session,
                 imports_for_sproc,
@@ -317,18 +266,14 @@ call kedro_start_run();
                     "openpyxl",
                     "backoff",
                 ],
-                SNOWFLAKE_STAGE_NAME,
-                SNOWFLAKE_TEMP_DATA_STAGE,
+                snowflake_stage_name,
+                snowflake_temp_data_stage,
             )
-            print(snowflake_sproc)
+            logger.info(snowflake_sproc)
             pipeline_sql_statements = self._generate_snowflake_tasks_sql(
                 pipeline, connection_parameters, extra_params=None
             )
-            print("Executing query")
-            for sql in pipeline_sql_statements:
-                print(sql)
-                session.sql(sql).collect()
-                print("")
+            return pipeline_sql_statements
 
     def _group_nodes(self, pipeline: Pipeline) -> Dict[str, List[Node]]:
         # no grouping right now, for future use

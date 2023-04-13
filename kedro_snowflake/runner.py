@@ -6,7 +6,7 @@ from kedro.runner import SequentialRunner
 from pluggy import PluginManager
 from snowflake.snowpark import Session
 
-from snowflake_flights.datasets import SnowflakeRunnerDataSet
+from kedro_snowflake.datasets.internal import SnowflakeRunnerDataSet
 
 
 class SnowflakeRunner(SequentialRunner):
