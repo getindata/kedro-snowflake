@@ -40,10 +40,12 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{self._r
         pipeline_name: str,
         kedro_environment: str,
         config: KedroSnowflakeConfig,
+        connection_parameters: Dict[str, Any],
         kedro_params: Dict[str, Any],
         extra_params: Optional[str] = None,
         extra_env: Dict[str, str] = None,
     ):
+        self.connection_parameters = connection_parameters
         self.kedro_environment = kedro_environment
 
         self.extra_params = extra_params

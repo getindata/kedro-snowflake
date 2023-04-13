@@ -95,6 +95,12 @@ def init(
     help="Parameters override in form of JSON string",
 )
 @click.option(
+    "--dry-run",
+    "dry_run",
+    is_flag=True,
+    help="Only save SQL definition, do not run it (use --output to specify file)",
+)
+@click.option(
     "-o",
     "--output",
     type=click.types.Path(exists=False, dir_okay=False),
@@ -108,8 +114,13 @@ def init(
     help="Environment variables to be injected in the steps, format: KEY=VALUE",
 )
 @click.pass_obj
-def compile(
-    ctx: CliContext, pipeline: str, params: str, output: str, env_var: Tuple[str]
+def run(
+    ctx: CliContext,
+    pipeline: str,
+    params: str,
+    dry_run: bool,
+    output: str,
+    env_var: Tuple[str],
 ):
     """Creates Snowflake tasks SQL (! it also creates stored procedures in Snowflake!)"""
     params = json.dumps(p) if (p := parse_extra_params(params)) else ""
@@ -118,5 +129,18 @@ def compile(
         mgr,
         snowflake_pipeline,
     ):
-        snowflake_pipeline.save(Path(output))
-        click.echo(f"Snowflake tasks generated into {output}")
+        if not dry_run:
+            snowflake_pipeline.run()
+            click.echo("Snowflake tasks execution started")
+            # TODO: add --wait-for-completion by monitoring:
+            # select name, scheduled_time, completed_time
+            #   from table(information_schema.task_history())
+            #   order by scheduled_time desc;
+        else:
+            click.echo("Snowflake tasks execution skipped (--dry-run)")
+        try:
+            snowflake_pipeline.save(Path(output))
+            click.echo(f"Snowflake tasks generated into {output}")
+        except Exception as e:
+            click.echo(click.style(f"Could not save tasks SQL into {output}", fg="red"))
+            raise e
