@@ -15,7 +15,7 @@ from snowflake.snowpark.functions import sproc
 from snowflake.snowpark.session import Session
 
 from kedro_snowflake.config import KedroSnowflakeConfig
-from kedro_snowflake.misc import KedroSnowflakePipeline
+from kedro_snowflake.pipeline import KedroSnowflakePipeline
 from kedro_snowflake.utils import zstd_folder, zip_dependencies, get_module_path
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ as
 {task_body};
 """.strip()
     TASK_BODY_TEMPLATE = """
-call {sproc_name}('{environment}', system$get_predecessor_return_value('{self._root_task_name}'), '{pipeline_name}', ARRAY_CONSTRUCT({nodes_to_run}), '{extra_params}')
+call {sproc_name}('{environment}', system$get_predecessor_return_value('{root_task_name}'), '{pipeline_name}', ARRAY_CONSTRUCT({nodes_to_run}), '{extra_params}')
 """.strip()
 
     def __init__(
@@ -60,13 +60,17 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{self._r
         self.pipeline_name = pipeline_name
         self.extra_env = extra_env
 
+    def _get_pipeline_name_for_snowflake(self):
+        return (self.config.snowflake.runtime.pipeline_name_mapping or {}).get(
+            self.pipeline_name, self.pipeline_name
+        )
+
     def _generate_task_sql(
         self,
         task_name: str,
         after_tasks: List[str],
         pipeline_name: str,
         nodes_to_run: List[str],
-        root_task_name: str,
         extra_params: Optional[str] = None,
     ):
         return self.TASK_TEMPLATE.format(
@@ -74,7 +78,7 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{self._r
             warehouse=self.connection_parameters["warehouse"],
             after_tasks=",".join(after_tasks),
             task_body=self.TASK_BODY_TEMPLATE.format(
-                root_task_name=root_task_name,
+                root_task_name=self._root_task_name,
                 environment=self.kedro_environment,
                 sproc_name=self.SPROC_NAME,
                 pipeline_name=pipeline_name,
@@ -119,7 +123,6 @@ call {root_sproc}();
                     after_tasks,
                     self.pipeline_name,
                     [node.name],
-                    self._root_task_name,
                     self.extra_params,
                 )
             )
@@ -134,12 +137,14 @@ call {root_sproc}();
 
     @property
     def _root_task_name(self):
-        root_task_name = f"kedro_snowflake_start_{self.pipeline_name}_task".upper()
+        root_task_name = f"kedro_snowflake_start_{self._get_pipeline_name_for_snowflake()}_task".upper()
         return root_task_name
 
     @property
     def _root_sproc_name(self):
-        return f"kedro_snowflake_start_{self.pipeline_name}".upper()
+        return (
+            f"kedro_snowflake_start_{self._get_pipeline_name_for_snowflake()}".upper()
+        )
 
     def generate(self) -> KedroSnowflakePipeline:
         """Generate a SnowflakePipeline object from a Kedro pipeline.
@@ -278,7 +283,7 @@ call {root_sproc}();
 
         return sproc(
             func=kedro_start_run,
-            name=self._root_task_name,
+            name=self._root_sproc_name,
             is_permanent=True,
             replace=True,
             stage_location=stage_location,

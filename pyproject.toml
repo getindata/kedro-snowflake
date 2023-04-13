@@ -46,3 +46,8 @@ pytest = "<7"
 pytest-cov = ">=2.8.0, <4.0.0"
 tox = ">=3.25.1"
 pre-commit = "2.20.0"
+
+[tool.poetry.plugins] # Optional super table
+
+[tool.poetry.plugins."kedro.project_commands"]
+"snowflake" = "kedro_snowflake.cli:commands"

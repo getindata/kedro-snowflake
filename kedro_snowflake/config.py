@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import yaml
 from pydantic import BaseModel, root_validator, Field
@@ -27,14 +27,14 @@ class SnowflakeConnectionConfig(BaseModel):
                     "password_from_env",
                     "database",
                     "warehouse",
-                    "schema",
-                    "role",
+                    "schema_",
                 ]
             )
         ):
             raise ValueError(
                 "Either credentials or all of the following fields: account, user, "
-                "password_from_env, database, warehouse, schema, role must be provided."
+                "password_from_env, database, warehouse, schema must be provided."
+                f"Got fields: {values.keys()}"
             )
         return values
 
@@ -76,6 +76,7 @@ class SnowflakeRuntimeConfig(BaseModel):
     temporary_stage: str = "@KEDRO_SNOWFLAKE_TEMP_DATA_STAGE"
     schedule: str = "11520 minute"
     stored_procedure_name_suffix: Optional[str] = ""
+    pipeline_name_mapping: Optional[Dict[str, str]] = {"__default__": "default"}
 
 
 class SnowflakeConfig(BaseModel):
@@ -99,7 +100,7 @@ snowflake:
     database: "{database}"
     # Name of the environment variable to take the Snowflake password from
     password_from_env: "{password_from_env}"
-    role: "{role}"
+    role: ~
     schema: "{schema}"
     user: "{user}"
     warehouse: "{warehouse}"
@@ -150,6 +151,9 @@ snowflake:
       - more-itertools
       - openpyxl
       - backoff
+    # Optionally provide mapping for user-friendly pipeline names
+    pipeline_name_mapping:
+     __default__: default
 """.strip()
 
 # This auto-validates the template above during import

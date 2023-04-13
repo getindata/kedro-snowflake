@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Tuple
 
 import click
-from kedro.framework.startup import ProjectMetadata
 
 from kedro_snowflake.cli_functions import (
     parse_extra_params,
@@ -17,7 +16,7 @@ from kedro_snowflake.misc import CliContext
 
 @click.group("Snowflake")
 def commands():
-    """Kedro plugin adding support for Azure ML Pipelines"""
+    """Kedro plugin adding support for Snowflake / Snowpark"""
     pass
 
 
@@ -34,25 +33,25 @@ def commands():
 )
 @click.pass_obj
 @click.pass_context
-def snowflake_group(ctx, metadata: ProjectMetadata, env):
+def snowflake_group(ctx, metadata, env):
     ctx.obj = CliContext(env, metadata)
 
 
 @snowflake_group.command()
 @click.argument("account")
-@click.argument("database")
-@click.argument("password_from_env")
-@click.argument("schema")
 @click.argument("user")
+@click.argument("password_from_env")
+@click.argument("database")
+@click.argument("schema")
 @click.argument("warehouse")
 @click.pass_obj
 def init(
     ctx: CliContext,
     account: str,
-    database: str,
-    password_from_env: str,
-    schema: str,
     user: str,
+    password_from_env: str,
+    database: str,
+    schema: str,
     warehouse: str,
 ):
     """
@@ -125,6 +124,7 @@ def run(
     """Creates Snowflake tasks SQL (! it also creates stored procedures in Snowflake!)"""
     params = json.dumps(p) if (p := parse_extra_params(params)) else ""
     extra_env = parse_extra_env_params(env_var)
+
     with context_and_pipeline(ctx, pipeline, extra_env, params) as (
         mgr,
         snowflake_pipeline,
@@ -137,7 +137,11 @@ def run(
             #   from table(information_schema.task_history())
             #   order by scheduled_time desc;
         else:
-            click.echo("Snowflake tasks execution skipped (--dry-run)")
+            click.echo(
+                click.style(
+                    "Snowflake tasks execution skipped (--dry-run)", fg="yellow"
+                )
+            )
         try:
             snowflake_pipeline.save(Path(output))
             click.echo(f"Snowflake tasks generated into {output}")
