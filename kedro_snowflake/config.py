@@ -4,6 +4,7 @@ import yaml
 from pydantic import BaseModel, root_validator, Field
 
 KEDRO_SNOWFLAKE_CONFIG_PATTERN = "snowflake*"
+KEDRO_SNOWFLAKE_CONFIG_KEY = "snowflake"
 
 
 class SnowflakeConnectionConfig(BaseModel):

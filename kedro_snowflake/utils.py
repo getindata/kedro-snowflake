@@ -11,7 +11,11 @@ import zstandard as zstd
 from kedro.config import AbstractConfigLoader, ConfigLoader
 from kedro.framework.session import KedroSession
 
-from kedro_snowflake.config import KedroSnowflakeConfig, KEDRO_SNOWFLAKE_CONFIG_PATTERN
+from kedro_snowflake.config import (
+    KedroSnowflakeConfig,
+    KEDRO_SNOWFLAKE_CONFIG_PATTERN,
+    KEDRO_SNOWFLAKE_CONFIG_KEY,
+)
 
 
 def compress_folder_to_zip(path, zip_path, exclude=None):
@@ -93,13 +97,26 @@ class KedroContextManager:
     @cached_property
     def plugin_config(self) -> KedroSnowflakeConfig:
         cl: AbstractConfigLoader = self.context.config_loader
-        obj = self.context.config_loader.get(KEDRO_SNOWFLAKE_CONFIG_PATTERN)
+        obj = self.context.config_loader.get(KEDRO_SNOWFLAKE_CONFIG_PATTERN, None)
+
+        if obj is None:
+            try:
+                obj = self.context.config_loader[KEDRO_SNOWFLAKE_CONFIG_KEY]
+            except KeyError:
+                obj = None
+
         if obj is None:
             if not isinstance(cl, ConfigLoader):
                 raise ValueError(
                     f"You're using a custom config loader: {cl.__class__.__qualname__}{os.linesep}"
                     f"you need to add the snowflake config to it.{os.linesep}"
-                    "Make sure you add snowflake* to config_pattern in CONFIG_LOADER_ARGS in the settings.py file."
+                    f"Make sure you add snowflake* to config_pattern in CONFIG_LOADER_ARGS in the settings.py file.{os.linesep}"
+                    """Example:
+CONFIG_LOADER_ARGS = {
+    # other args
+    "config_patterns": {"snowflake": ["snowflake*"]}
+}
+                    """.strip()
                 )
             else:
                 raise ValueError(

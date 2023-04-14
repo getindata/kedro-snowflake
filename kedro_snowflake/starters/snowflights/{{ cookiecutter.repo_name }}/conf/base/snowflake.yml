@@ -1,0 +1,65 @@
+snowflake:
+  connection:
+    # Either credentials name (Reference to a key in credentials.yml as in standard Kedro)
+    # or leave
+    # credentials: ~
+    # and specify rest of the fields
+    credentials: snowflake
+#    account: "{{ cookiecutter.snowflake_account }}"
+#    database: "{{ cookiecutter.snowflake_database }}"
+    # Name of the environment variable to take the Snowflake password from
+#    password_from_env: "{{ cookiecutter.snowflake_password_env_variable }}"
+#    role: ~
+#    schema: "{{ cookiecutter.snowflake_schema }}"
+#    user: "{{ cookiecutter.snowflake_user }}"
+#    warehouse: "{{ cookiecutter.snowflake_warehouse }}"
+  runtime:
+    # Default schedule for Kedro tasks
+    schedule: "11520 minute"
+
+    # Optional suffix for all kedro stored procedures
+    stored_procedure_name_suffix: ""
+
+    # Names of the stages
+    # `stage` is for stored procedures etc.
+    # `temporary_stage` is for temporary data serialization
+    stage: "@KEDRO_SNOWFLAKE_STAGE"
+    temporary_stage: '@KEDRO_SNOWFLAKE_TEMP_DATA_STAGE'
+
+    # List of Python packages and imports to be used by the project
+    # We recommend that this list will be add-only, and not modified
+    # as it may break the project once deployed to Snowflake.
+    # Modify at your own risk!
+    dependencies:
+      # imports will be taken from local environment and will get uploaded to Snowflake
+      imports:
+      - kedro
+      - kedro_datasets
+      - kedro_snowflake
+      - omegaconf
+      - antlr4
+      - dynaconf
+      - anyconfig
+      # packages use official Snowflake's Conda Channel
+      # https://repo.anaconda.com/pkgs/snowflake/
+      packages:
+      - snowflake-snowpark-python
+      - cachetools
+      - pluggy
+      - PyYAML==6.0
+      - jmespath
+      - click
+      - importlib_resources
+      - toml
+      - rich
+      - pathlib
+      - fsspec
+      - scikit-learn
+      - pandas
+      - zstandard
+      - more-itertools
+      - openpyxl
+      - backoff
+    # Optionally provide mapping for user-friendly pipeline names
+    pipeline_name_mapping:
+     __default__: default
