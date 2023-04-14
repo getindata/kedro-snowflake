@@ -52,3 +52,6 @@ pre-commit = "2.20.0"
 
 [tool.poetry.plugins."kedro.project_commands"]
 "snowflake" = "kedro_snowflake.cli:commands"
+
+[tool.poetry.plugins."kedro.starters"]
+"starter" = "kedro_snowflake.starters:starters"
