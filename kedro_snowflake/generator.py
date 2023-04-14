@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import re
@@ -7,7 +6,6 @@ from collections import defaultdict
 from functools import cached_property
 from pathlib import Path
 from typing import Any, Dict, Optional, List
-from uuid import uuid4
 
 from kedro.pipeline import Pipeline
 from kedro.pipeline.node import Node
@@ -212,7 +210,11 @@ call {root_sproc}();
             logger.info(snowflake_sproc)
             pipeline_sql_statements = self._generate_snowflake_tasks_sql(pipeline)
             return KedroSnowflakePipeline(
-                session, pipeline_sql_statements, self._generate_task_execute_sql()
+                session,
+                pipeline_sql_statements,
+                self._generate_task_execute_sql(),
+                self._root_task_name,
+                [self._sanitize_node_name(n.name) for n in pipeline.nodes],
             )
 
     def _generate_imports_for_sproc(self, dependencies_dir, snowflake_stage_name):

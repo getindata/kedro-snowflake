@@ -1817,6 +1817,21 @@ pandas = ["snowflake-connector-python[pandas] (>=2.7.12,<3.0.0)"]
 secure-local-storage = ["snowflake-connector-python[secure-local-storage] (>=2.7.12,<3.0.0)"]
 
 [[package]]
+name = "tabulate"
+version = "0.9.0"
+description = "Pretty-print tabular data"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f"},
+    {file = "tabulate-0.9.0.tar.gz", hash = "sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c"},
+]
+
+[package.extras]
+widechars = ["wcwidth"]
+
+[[package]]
 name = "text-unidecode"
 version = "1.3"
 description = "The most basic Text::Unidecode port"
@@ -2043,4 +2058,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.9"
-content-hash = "7eda7161a9ed576364bd8877bf7187c0337f6ab60f233d9a6860c21e1b50d368"
+content-hash = "4af269450ea3532c0e8024f4f0cfcff06da54445a8abcf5ce67e774b157b285e"

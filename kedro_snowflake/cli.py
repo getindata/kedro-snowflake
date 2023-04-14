@@ -12,6 +12,7 @@ from kedro_snowflake.cli_functions import (
 )
 from kedro_snowflake.config import CONFIG_TEMPLATE_YAML
 from kedro_snowflake.misc import CliContext
+from kedro_snowflake.pipeline import KedroSnowflakePipeline
 
 
 @click.group("Snowflake")
@@ -112,6 +113,17 @@ def init(
     multiple=True,
     help="Environment variables to be injected in the steps, format: KEY=VALUE",
 )
+@click.option(
+    "--wait-for-completion",
+    is_flag=True,
+    help="Block the terminal until the pipeline is completed",
+)
+@click.option(
+    "--timeout",
+    type=int,
+    help="Timeout in seconds for the pipeline to complete (used only with --wait-for-completion)",
+    default=600,
+)
 @click.pass_obj
 def run(
     ctx: CliContext,
@@ -120,22 +132,34 @@ def run(
     dry_run: bool,
     output: str,
     env_var: Tuple[str],
+    wait_for_completion: bool,
+    timeout: int,
 ):
     """Runs the pipeline using Snowflake Tasks"""
     params = json.dumps(p) if (p := parse_extra_params(params)) else ""
     extra_env = parse_extra_env_params(env_var)
 
+    click.echo(
+        f"Converting Kedro pipeline {pipeline} into Snowflake tasks...{os.linesep}"
+        "This may take a while if warehouse is stopped, please be patient..."
+    )
+
+    snowflake_pipeline: KedroSnowflakePipeline
     with context_and_pipeline(ctx, pipeline, extra_env, params) as (
         mgr,
         snowflake_pipeline,
     ):
+        exit_code = 0
         if not dry_run:
-            snowflake_pipeline.run()
-            click.echo("Snowflake tasks execution started")
-            # TODO: add --wait-for-completion by monitoring:
-            # select name, scheduled_time, completed_time
-            #   from table(information_schema.task_history())
-            #   order by scheduled_time desc;
+            success = snowflake_pipeline.run(
+                wait_for_completion,
+                timeout,
+                echo_fn=lambda s: (click.clear(), click.echo(s)),
+                on_start_callback=lambda: click.echo(
+                    "Snowflake tasks execution started"
+                ),
+            )
+            exit_code = 0 if success else 1
         else:
             click.echo(
                 click.style(
@@ -148,3 +172,4 @@ def run(
         except Exception as e:
             click.echo(click.style(f"Could not save tasks SQL into {output}", fg="red"))
             raise e
+        exit(exit_code)

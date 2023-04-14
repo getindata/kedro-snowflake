@@ -48,7 +48,7 @@ def resolve_connection_params_from_config(mgr):
     """Uses either credentials.yml or environment variables to resolve connection parameters
     (especially password for Snowflake)"""
     if c := mgr.plugin_config.snowflake.connection.credentials:
-        connection_params = mgr.context.config_loader.get("credentials").get(c, None)
+        connection_params = mgr.context.config_loader["credentials"].get(c, None)
         if not connection_params:
             raise ValueError(f"Credentials {c} not found in credentials.yml")
     else:
