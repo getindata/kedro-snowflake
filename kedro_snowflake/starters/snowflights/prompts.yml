@@ -12,7 +12,7 @@ snowflake_account:
   text: |
     Please enter the name of your Snowflake account.
     This is the part of the URL before .snowflakecomputing.com
-  regex_validator: "^[A-Za-z-]{2,}$"
+  regex_validator: "^[A-Za-z0-9-]{2,}$"
   error_message: |
     It must contain only alphanumeric symbols and hyphens and
     be at least 2 characters long.
