@@ -2,5 +2,11 @@
     "project_name": "Snowflights",
     "repo_name": "{{ cookiecutter.project_name.strip().replace(' ', '-').replace('_', '-').lower() }}",
     "python_package": "{{ cookiecutter.project_name.strip().replace(' ', '_').replace('-', '_').lower() }}",
-    "kedro_version": "{{ cookiecutter.kedro_version }}"
+    "kedro_version": "{{ cookiecutter.kedro_version }}",
+    "snowflake_account": "{{ cookiecutter.snowflake_account }}",
+    "snowflake_user": "{{ cookiecutter.snowflake_user }}",
+    "snowflake_warehouse": "{{ cookiecutter.snowflake_warehouse }}",
+    "snowflake_database": "{{ cookiecutter.snowflake_database }}",
+    "snowflake_schema": "{{ cookiecutter.snowflake_schema }}",
+    "snowflake_password_env_variable": "{{ cookiecutter.snowflake_password_env_variable }}"
 }

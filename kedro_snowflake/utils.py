@@ -8,8 +8,9 @@ from uuid import uuid4
 import zipfile
 import os
 import zstandard as zstd
-from kedro.config import AbstractConfigLoader, ConfigLoader
+from kedro.config import AbstractConfigLoader, ConfigLoader, OmegaConfigLoader
 from kedro.framework.session import KedroSession
+from omegaconf import DictConfig, OmegaConf
 
 from kedro_snowflake.config import (
     KedroSnowflakeConfig,
@@ -102,6 +103,8 @@ class KedroContextManager:
         if obj is None:
             try:
                 obj = self.context.config_loader[KEDRO_SNOWFLAKE_CONFIG_KEY]
+                if isinstance(cl, OmegaConfigLoader):
+                    obj = OmegaConf.to_container(obj)
             except KeyError:
                 obj = None
 

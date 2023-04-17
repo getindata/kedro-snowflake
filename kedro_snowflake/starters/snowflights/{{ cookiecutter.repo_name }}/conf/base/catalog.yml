@@ -43,6 +43,13 @@ companies:
   type: pandas.CSVDataSet
   filepath: data/01_raw/companies.csv
 
+companies_snowflake:
+  type: kedro_datasets.snowflake.SnowparkTableDataSet
+  table_name: companies_snowflights_starter
+  credentials: snowflake
+  save_args:
+    mode: overwrite
+
 reviews:
   type: pandas.CSVDataSet
   filepath: data/01_raw/reviews.csv

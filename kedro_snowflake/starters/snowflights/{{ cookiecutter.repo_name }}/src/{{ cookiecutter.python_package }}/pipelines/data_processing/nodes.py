@@ -1,20 +1,25 @@
 import pandas as pd
+import snowflake.snowpark as sp
+from snowflake.snowpark.functions import udf
+from typing import Optional
 
 
 def _is_true(x: pd.Series) -> pd.Series:
     return x == "t"
 
 
-def _parse_percentage(x: pd.Series) -> pd.Series:
-    x = x.str.replace("%", "")
-    x = x.astype(float) / 100
-    return x
-
-
 def _parse_money(x: pd.Series) -> pd.Series:
     x = x.str.replace("$", "", regex=True).str.replace(",", "")
     x = x.astype(float)
     return x
+
+
+def export_data_to_snowflake(companies: pd.DataFrame) -> sp.DataFrame:
+    """Exports data to Snowflake.
+    This node is only for the demonstration purposes
+    """
+    companies.columns = companies.columns.str.upper()
+    return sp.context.get_active_session().create_dataframe(companies)
 
 
 def preprocess_companies(companies: pd.DataFrame) -> pd.DataFrame:
@@ -26,9 +31,16 @@ def preprocess_companies(companies: pd.DataFrame) -> pd.DataFrame:
         Preprocessed data, with `company_rating` converted to a float and
         `iata_approved` converted to boolean.
     """
-    companies["iata_approved"] = _is_true(companies["iata_approved"])
-    companies["company_rating"] = _parse_percentage(companies["company_rating"])
-    return companies
+
+    @udf(
+        name="parse_percentage", is_permanent=False, replace=True,
+    )
+    def parse_percentage(x: str) -> Optional[float]:
+        return float(x.replace("%", "")) / 100.0 if x else None
+
+    df = companies.withColumn("IATA_APPROVED", companies["IATA_APPROVED"] == "t")
+    df = df.withColumn("COMPANY_RATING", parse_percentage("COMPANY_RATING"))
+    return df
 
 
 def preprocess_shuttles(shuttles: pd.DataFrame) -> pd.DataFrame:
@@ -59,6 +71,8 @@ def create_model_input_table(
         Model input table.
 
     """
+    companies = companies.toPandas()
+    companies.columns = companies.columns.str.lower()
     rated_shuttles = shuttles.merge(reviews, left_on="id", right_on="shuttle_id")
     model_input_table = rated_shuttles.merge(
         companies, left_on="company_id", right_on="id"

@@ -60,21 +60,22 @@ where run_id = {run_id}
 order by scheduled_time;
                             """.strip()
             ).to_pandas()
-            return state, tabulate(
+            return (
                 state,
-                headers="keys",
-                tablefmt="psql",
-                showindex=False,
+                tabulate(state, headers="keys", tablefmt="psql", showindex=False,),
             )
 
         while not finished and (monotonic() - start_ts) < timeout_seconds:
             state, state_printable = get_current_state()
             echo(state_printable + os.linesep + f"Last update: {dt.datetime.now()}")
             task_names = set(state["NAME"].str.upper())
-            finished = all(state["COMPLETED_TIME"].notnull()) and all(
-                t.upper() in task_names
-                for t in (self.pipeline_task_names + [self.root_task_name])
-            )
+            finished = (
+                all(state["COMPLETED_TIME"].notnull())
+                and all(
+                    t.upper() in task_names
+                    for t in (self.pipeline_task_names + [self.root_task_name])
+                )
+            ) or any(state["STATE"].str.upper() == "FAILED")
             if finished:
                 break
             sleep(11)
@@ -84,12 +85,14 @@ order by scheduled_time;
 
         if finished:
             state, state_printable = get_current_state()
+            success = all(state["STATE"].str.upper() == "SUCCEEDED")
             echo(
                 state_printable
                 + os.linesep
-                + f"Pipeline finished at {dt.datetime.now()} (in approx. {monotonic()-start_ts}s)"
+                + f"Pipeline finished at {dt.datetime.now()} (in approx. {monotonic()-start_ts}s). "
+                f"Status: {'SUCCEEDED' if success else 'FAILED'}"
             )
-            success = all(state["STATE"].str.upper() == "SUCCEEDED")
+
             return success
         else:
             return False
