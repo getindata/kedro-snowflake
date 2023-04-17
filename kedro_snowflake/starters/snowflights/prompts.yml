@@ -20,28 +20,28 @@ snowflake_user:
   title: "Snowflake User"
   text: |
     Please enter the name of your Snowflake user.
-  regex_validator: "^\w+$"
+  regex_validator: "^\\w+$"
   error_message: |
     It must contain only alphanumeric symbols and hyphens
 snowflake_warehouse:
   title: "Snowflake Warehouse"
   text: |
     Please enter the name of your Snowflake warehouse.
-  regex_validator: "^\w+$"
+  regex_validator: "^\\w+$"
   error_message: |
     It must contain only alphanumeric symbols and hyphens
 snowflake_database:
   title: "Snowflake Database"
   text: |
     Please enter the name of your Snowflake database.
-  regex_validator: "^\w+$"
+  regex_validator: "^\\w+$"
   error_message: |
     It must contain only alphanumeric symbols and hyphens
 snowflake_schema:
   title: "Snowflake Schema"
   text: |
     Please enter the name of your Snowflake schema.
-  regex_validator: "^\w+$"
+  regex_validator: "^\\w+$"
   error_message: |
     It must contain only alphanumeric symbols and hyphens
 snowflake_password_env_variable:
@@ -49,6 +49,6 @@ snowflake_password_env_variable:
   text: |
     Please enter the name of the environment variable that contains your Snowflake password.
     Alternatively, you can re-configure the plugin later to use Kedro's credentials.yml
-  regex_validator: "^[A-Za-z0-9\_]$"
+  regex_validator: "^[A-Za-z0-9\\_]$"
   error_message: |
     It must contain only alphanumeric symbols and underscores
