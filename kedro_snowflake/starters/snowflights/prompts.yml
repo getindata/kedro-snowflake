@@ -49,6 +49,6 @@ snowflake_password_env_variable:
   text: |
     Please enter the name of the environment variable that contains your Snowflake password.
     Alternatively, you can re-configure the plugin later to use Kedro's credentials.yml
-  regex_validator: "^[A-Za-z0-9\\_]$"
+  regex_validator: "^[A-Za-z0-9\_]$"
   error_message: |
     It must contain only alphanumeric symbols and underscores
