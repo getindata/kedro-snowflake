@@ -102,7 +102,10 @@ call {root_sproc}();
     def _sanitize_node_name(self, node_name: str) -> str:
         return re.sub(r"\W", "_", node_name)
 
-    def _generate_snowflake_tasks_sql(self, pipeline: Pipeline,) -> List[str]:
+    def _generate_snowflake_tasks_sql(
+        self,
+        pipeline: Pipeline,
+    ) -> List[str]:
         sql_statements = [self._generate_root_task_sql()]
 
         node_dependencies = (
@@ -192,7 +195,9 @@ call {root_sproc}();
             )
 
             logger.info("Creating Kedro Snowflake root sproc")
-            self._construct_kedro_snowflake_root_sproc(session, snowflake_stage_name)
+            root_sproc = self._construct_kedro_snowflake_root_sproc(
+                session, snowflake_stage_name
+            )
 
             logger.info("Creating Kedro Snowflake Sproc")
             snowflake_sproc = self._construct_kedro_snowflake_sproc(
@@ -204,7 +209,7 @@ call {root_sproc}();
                 temp_data_stage=snowflake_temp_data_stage,
             )
 
-            logger.info(snowflake_sproc)
+            logger.debug(snowflake_sproc)
             pipeline_sql_statements = self._generate_snowflake_tasks_sql(pipeline)
             return KedroSnowflakePipeline(
                 session,
@@ -235,7 +240,10 @@ call {root_sproc}();
     def _package_dependencies(self, dependencies_dir, project_files_dir):
         # Package dependencies that work with Snowpark's import
         zip_dependencies(
-            ["toposort",], dependencies_dir,
+            [
+                "toposort",
+            ],
+            dependencies_dir,
         )
         # Special packages that need to be extracted into PYTHONPATH at runtime (imports don't work)
         special_packages = self.config.snowflake.runtime.dependencies.imports
