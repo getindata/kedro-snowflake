@@ -43,6 +43,7 @@ companies:
   type: pandas.CSVDataSet
   filepath: data/01_raw/companies.csv
 
+# You can use Kedro's official SnowparkTableDataSet dataset with this plugin :)
 companies_snowflake:
   type: kedro_datasets.snowflake.SnowparkTableDataSet
   table_name: companies_snowflights_starter
@@ -59,3 +60,15 @@ shuttles:
   filepath: data/01_raw/shuttles.xlsx
   load_args:
     engine: openpyxl # Use modern Excel engine, it is the default since Kedro 0.18.0
+
+# You can also use Snowflake-native stage to store/read data directly from Snowflake
+# The SnowflakeStageFileDataSet is a wrapper around Kedro's native datasets, e.g. pandas.CSVDataSet
+# See the example below to understand its usage
+preprocessed_shuttles:
+  type: kedro_snowflake.datasets.native.SnowflakeStageFileDataSet
+  stage: "@KEDRO_SNOWFLAKE_TEMP_DATA_STAGE" # <-- Snowflake stage to store data in
+  filepath: data/02_intermediate/preprocessed_shuttles.csv # <-- file path within the stage
+  credentials: snowflake # <-- credentials to connect to Snowflake (the same as for SnowparkTableDataSet)
+  dataset: # <-- dataset key defines the dataset type to use
+    type: pandas.CSVDataSet # <-- specify any params for the nested dataset here, skipping the filepath (it will be injected dynamically at runtime)
+  # filepath_arg: <-- if the nested dataset uses path name different than `filepath`, you can override it using `filepath_arg: custom_param_name`
