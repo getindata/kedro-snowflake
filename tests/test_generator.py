@@ -2,7 +2,7 @@ import json
 from unittest.mock import patch
 
 from snowflake.snowpark import Session
-
+from uuid import UUID
 from kedro_snowflake.generator import SnowflakePipelineGenerator
 from kedro_snowflake.pipeline import KedroSnowflakePipeline
 from tests.utils import get_arg_type
@@ -56,3 +56,18 @@ def test_kedro_run_sproc_is_valid(
             json.loads(result), dict
         ), "Cannot deserialize result of kedro_run_sproc"
         # check if first argument of `fn` is of type Session
+
+
+def test_kedro_start_run_sproc_is_valid(
+    patched_snowflake_pipeline_generator: SnowflakePipelineGenerator,
+):
+    g = patched_snowflake_pipeline_generator
+    g._construct_kedro_snowflake_root_sproc(stage_location="@TEST_STAGE")
+    fn = g.snowflake_session.method_calls[0].args[0]
+    assert get_arg_type(fn, 0) == Session
+    assert callable(fn)
+    result = fn(g.snowflake_session)
+    g.snowflake_session.sql.assert_called_once()
+    assert isinstance(result, str) and isinstance(
+        UUID(result), UUID
+    ), "Result is not a valid UUID"  # UUID will throw, when invalid

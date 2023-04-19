@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 from unittest.mock import patch
 
 from kedro.pipeline import Pipeline, pipeline, node
@@ -58,6 +59,9 @@ def patched_snowflake_pipeline_generator(
 ):
     with patch("snowflake.snowpark.session.Session") as session, patch.dict(
         os.environ, {"SNOWFLAKE_PASSWORD": "test_password"}
+    ), patch.dict(
+        "kedro.framework.project.pipelines",
+        {"__default__": dummy_pipeline, "test_pipeline": dummy_pipeline},
     ):
         generator = SnowflakePipelineGenerator(
             "test_pipeline",
@@ -71,5 +75,4 @@ def patched_snowflake_pipeline_generator(
             None,
             None,
         )
-        with patch.object(generator, "get_kedro_pipeline", return_value=dummy_pipeline):
-            yield generator
+        yield generator

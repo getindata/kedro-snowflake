@@ -196,7 +196,7 @@ call {root_sproc}();
 
             logger.info("Creating Kedro Snowflake root sproc")
             root_sproc = self._construct_kedro_snowflake_root_sproc(
-                session, snowflake_stage_name
+                snowflake_stage_name
             )
 
             logger.info("Creating Kedro Snowflake Sproc")
@@ -267,17 +267,7 @@ call {root_sproc}();
     def snowflake_session(self):
         return Session.builder.configs(self.connection_parameters).create()
 
-    def _group_nodes(self, pipeline: Pipeline) -> Dict[str, List[Node]]:
-        # no grouping right now, for future use
-        groups = defaultdict(list)
-        for node in pipeline.nodes:
-            group = node.name
-            groups[group].append(node)
-        return groups
-
-    def _construct_kedro_snowflake_root_sproc(
-        self, session: Session, stage_location: str
-    ):
+    def _construct_kedro_snowflake_root_sproc(self, stage_location: str):
         def kedro_start_run(session: Session) -> str:
             from uuid import uuid4
 
@@ -293,7 +283,7 @@ call {root_sproc}();
             stage_location=stage_location,
             packages=["snowflake-snowpark-python"],
             execute_as="caller",
-            session=session,
+            session=self.snowflake_session,
         )
 
     def _construct_kedro_snowflake_sproc(
