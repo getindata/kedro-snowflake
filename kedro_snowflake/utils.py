@@ -98,7 +98,10 @@ class KedroContextManager:
     @cached_property
     def plugin_config(self) -> KedroSnowflakeConfig:
         cl: AbstractConfigLoader = self.context.config_loader
-        obj = self.context.config_loader.get(KEDRO_SNOWFLAKE_CONFIG_PATTERN, None)
+        try:
+            obj = self.context.config_loader.get(KEDRO_SNOWFLAKE_CONFIG_PATTERN)
+        except:
+            obj = None
 
         if obj is None:
             try:
