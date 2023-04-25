@@ -2,8 +2,6 @@ import os
 from unittest.mock import MagicMock, patch
 
 from kedro.pipeline import Pipeline, node, pipeline
-from pytest import fixture
-
 from kedro_snowflake.config import (
     DependenciesConfig,
     KedroSnowflakeConfig,
@@ -15,6 +13,8 @@ from kedro_snowflake.config import (
 )
 from kedro_snowflake.generator import SnowflakePipelineGenerator
 from kedro_snowflake.misc import CliContext
+from pytest import fixture
+
 from tests.utils import identity
 
 
