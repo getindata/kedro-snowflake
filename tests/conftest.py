@@ -10,6 +10,8 @@ from kedro_snowflake.config import (
     SnowflakeConfig,
     SnowflakeConnectionConfig,
     SnowflakeRuntimeConfig,
+    SnowflakeMLflowConfig,
+    MLflowFunctionsConfig
 )
 from kedro_snowflake.generator import SnowflakePipelineGenerator
 from kedro_snowflake.misc import CliContext
@@ -47,6 +49,7 @@ def mock_plugin_config():
                 schema="test_schema",
             ),
             runtime=SnowflakeRuntimeConfig(dependencies=DependenciesConfig()),
+            mlflow=SnowflakeMLflowConfig(functions=MLflowFunctionsConfig())
         )
     )
 
