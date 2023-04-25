@@ -43,6 +43,7 @@ class SnowflakeConnectionConfig(BaseModel):
 class DependenciesConfig(BaseModel):
     packages: List[str] = [
         "snowflake-snowpark-python",
+        "mlflow",
         "cachetools",
         "pluggy",
         "PyYAML==6.0",
@@ -80,9 +81,22 @@ class SnowflakeRuntimeConfig(BaseModel):
     pipeline_name_mapping: Optional[Dict[str, str]] = {"__default__": "default"}
 
 
+class MLflowFunctionsConfig(BaseModel):
+    experiment_get_by_name: str = "mlflow_experiment_get_by_name"
+    run_create: str = "mlflow_run_create"
+    run_log_metric: str = "mlflow_run_log_metric"
+    run_log_parameter: str = "mlflow_run_log_parameter"
+
+
+class SnowflakeMLflowConfig(BaseModel):
+    experiment_name: Optional[str]
+    functions: MLflowFunctionsConfig
+
+
 class SnowflakeConfig(BaseModel):
     connection: SnowflakeConnectionConfig
     runtime: SnowflakeRuntimeConfig
+    mlflow: SnowflakeMLflowConfig
 
 
 class KedroSnowflakeConfig(BaseModel):
@@ -136,6 +150,7 @@ snowflake:
       # https://repo.anaconda.com/pkgs/snowflake/
       packages:
       - snowflake-snowpark-python
+      - mlflow
       - cachetools
       - pluggy
       - PyYAML==6.0
@@ -155,6 +170,16 @@ snowflake:
     # Optionally provide mapping for user-friendly pipeline names
     pipeline_name_mapping:
      __default__: default
+  # EXPERIMENTAL: Either MLflow experiment name to enable MLflow tracking
+  # or leave empty
+  mlflow:
+    experiment_name: ~
+    # Snowflake external functions needed for calling MLflow instance
+    functions:
+        experiment_get_by_name: mlflow_experiment_get_by_name
+        run_create: mlflow_run_create
+        run_log_metric: mlflow_run_log_metric
+        run_log_parameter: mlflow_run_log_parameter
 """.strip()
 
 # This auto-validates the template above during import
