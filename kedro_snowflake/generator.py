@@ -59,7 +59,9 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{root_ta
         self.config = config
         self.pipeline_name = pipeline_name
         self.extra_env = extra_env
-        self.mlflow_enabled = mlflow_enabled = True if self.config.snowflake.mlflow.experiment_name else False
+        self.mlflow_enabled = (
+            True if self.config.snowflake.mlflow.experiment_name else False
+        )
 
     def _get_pipeline_name_for_snowflake(self):
         return (self.config.snowflake.runtime.pipeline_name_mapping or {}).get(
@@ -79,7 +81,9 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{root_ta
             warehouse=self.connection_parameters["warehouse"],
             after_tasks=",".join(after_tasks),
             task_body=self.TASK_BODY_TEMPLATE.format(
-                root_task_name= self._root_task_name if not self.mlflow_enabled else self._mlflow_root_task_name,
+                root_task_name=self._root_task_name
+                if not self.mlflow_enabled
+                else self._mlflow_root_task_name,
                 environment=self.kedro_environment,
                 sproc_name=self.SPROC_NAME,
                 pipeline_name=pipeline_name,
@@ -102,6 +106,20 @@ call {root_sproc}();
             schedule=self.config.snowflake.runtime.schedule,
         )
 
+    def _generate_root_task_suspend_sql(self):
+        return """
+alter task {task_name} suspend;
+        """.strip().format(
+            task_name=self._root_task_name
+        )
+
+    def _generate_mlflow_drop_task_sql(self):
+        return """
+drop task if exists {task_name};
+        """.strip().format(
+            task_name=self._mlflow_root_task_name
+        )
+
     def _generate_mlflow_root_task_sql(self):
         return """
 create or replace task {task_name}
@@ -113,7 +131,7 @@ call {root_sproc}();
             task_name=self._mlflow_root_task_name,
             warehouse=self.connection_parameters["warehouse"],
             root_sproc=self._mlfow_root_sproc_name,
-            after_task=self._root_task_name
+            after_task=self._root_task_name,
         )
 
     def _sanitize_node_name(self, node_name: str) -> str:
@@ -123,17 +141,24 @@ call {root_sproc}();
         self,
         pipeline: Pipeline,
     ) -> List[str]:
-        sql_statements = [self._generate_root_task_sql()]
+        sql_statements = [
+            self._generate_root_task_sql(),
+            self._generate_root_task_suspend_sql(),
+        ]
         if self.mlflow_enabled:
             sql_statements.append(self._generate_mlflow_root_task_sql())
+        else:
+            sql_statements.append(self._generate_mlflow_drop_task_sql())
 
         node_dependencies = (
             pipeline.node_dependencies
         )  # <-- this one is not topological
         for node in pipeline.nodes:  # <-- this one is topological
-            after_tasks = [self._root_task_name] if not self.mlflow_enabled else [self._mlflow_root_task_name ] + [
-                self._sanitize_node_name(n.name) for n in node_dependencies[node]
-            ]
+            after_tasks = (
+                [self._root_task_name]
+                if not self.mlflow_enabled
+                else [self._mlflow_root_task_name]
+            ) + [self._sanitize_node_name(n.name) for n in node_dependencies[node]]
             sql_statements.append(
                 self._generate_task_sql(
                     self._sanitize_node_name(node.name),
@@ -170,9 +195,7 @@ call {root_sproc}();
 
     @property
     def _mlfow_root_sproc_name(self):
-        return (
-            f"kedro_snowflake_start_mlflow_{self._get_pipeline_name_for_snowflake()}".upper()
-        )
+        return f"kedro_snowflake_start_mlflow_{self._get_pipeline_name_for_snowflake()}".upper()
 
     def generate(self) -> KedroSnowflakePipeline:
         """Generate a SnowflakePipeline object from a Kedro pipeline.
@@ -231,8 +254,10 @@ call {root_sproc}();
             )
 
             if self.mlflow_enabled:
-                mlflow_root_sproc = self._construct_kedro_snowflake_mlflow_root_sproc(
-                    snowflake_stage_name
+                mlflow_root_sproc = (  # noqa: F841
+                    self._construct_kedro_snowflake_mlflow_root_sproc(
+                        snowflake_stage_name
+                    )
                 )
 
             logger.info("Creating Kedro Snowflake Sproc")
@@ -303,15 +328,24 @@ call {root_sproc}();
     def snowflake_session(self):
         return Session.builder.configs(self.connection_parameters).create()
 
-
     def _construct_kedro_snowflake_mlflow_root_sproc(self, stage_location: str):
         experiment_name = self.config.snowflake.mlflow.experiment_name
-        experiment_get_by_name_func = self.config.snowflake.mlflow.functions.experiment_get_by_name
+        experiment_get_by_name_func = (
+            self.config.snowflake.mlflow.functions.experiment_get_by_name
+        )
         run_create_func = self.config.snowflake.mlflow.functions.run_create
-        experiment_id = eval(self.snowflake_session.sql(f"SELECT {experiment_get_by_name_func}('{experiment_name}'):body.experiments[0].experiment_id").collect()[0][0])
+        experiment_id = eval(
+            self.snowflake_session.sql(
+                f"SELECT {experiment_get_by_name_func}('{experiment_name}'):body.experiments[0].experiment_id"
+            ).collect()[0][0]
+        )
 
         def mlflow_start_run(session: Session) -> str:
-            run_id = eval(session.sql(f"SELECT {run_create_func}({experiment_id}):body.run.info.run_id").collect()[0][0])
+            run_id = eval(
+                session.sql(
+                    f"SELECT {run_create_func}({experiment_id}):body.run.info.run_id"
+                ).collect()[0][0]
+            )
             session.sql(f"call system$set_return_value('{run_id}');").collect()
             return run_id
 
@@ -327,9 +361,9 @@ call {root_sproc}();
         )
 
     def _construct_kedro_snowflake_root_sproc(self, stage_location: str):
-
         def kedro_start_run(session: Session) -> str:
             from uuid import uuid4
+
             run_id = uuid4().hex
             session.sql(f"call system$set_return_value('{run_id}');").collect()
             return run_id
