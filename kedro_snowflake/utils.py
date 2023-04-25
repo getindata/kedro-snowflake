@@ -8,7 +8,12 @@ from uuid import uuid4
 import zipfile
 import os
 import zstandard as zstd
-from kedro.config import AbstractConfigLoader, ConfigLoader, OmegaConfigLoader
+from kedro.config import (
+    AbstractConfigLoader,
+    ConfigLoader,
+    OmegaConfigLoader,
+    MissingConfigException,
+)
 from kedro.framework.session import KedroSession
 from omegaconf import DictConfig, OmegaConf
 
@@ -105,10 +110,10 @@ class KedroContextManager:
 
         if obj is None:
             try:
-                obj = self.context.config_loader[KEDRO_SNOWFLAKE_CONFIG_KEY]
-                if isinstance(cl, OmegaConfigLoader):
-                    obj = OmegaConf.to_container(obj)
-            except KeyError:
+                obj = self._ensure_obj_is_dict(
+                    self.context.config_loader[KEDRO_SNOWFLAKE_CONFIG_KEY]
+                )
+            except (KeyError, MissingConfigException):
                 obj = None
 
         if obj is None:
@@ -129,6 +134,18 @@ CONFIG_LOADER_ARGS = {
                     "Missing snowflake.yml files in configuration. Make sure that you configure your project first"
                 )
         return KedroSnowflakeConfig.parse_obj(obj)
+
+    def _ensure_obj_is_dict(self, obj):
+        if isinstance(obj, DictConfig):
+            obj = OmegaConf.to_container(obj)
+        elif isinstance(obj, dict) and any(
+            isinstance(v, DictConfig) for v in obj.values()
+        ):
+            obj = {
+                k: (OmegaConf.to_container(v) if isinstance(v, DictConfig) else v)
+                for k, v in obj.items()
+            }
+        return obj
 
     def __enter__(self):
         self.session = KedroSession.create(

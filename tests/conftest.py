@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from kedro.pipeline import Pipeline, pipeline, node
 from pytest import fixture
@@ -13,7 +13,15 @@ from kedro_snowflake.config import (
     DependenciesConfig,
 )
 from kedro_snowflake.generator import SnowflakePipelineGenerator
+from kedro_snowflake.misc import CliContext
 from tests.utils import identity
+
+
+@fixture()
+def cli_context() -> CliContext:
+    metadata = MagicMock()
+    metadata.package_name = "tests"
+    return CliContext("local", metadata)
 
 
 @fixture()

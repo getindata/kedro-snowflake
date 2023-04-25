@@ -24,7 +24,7 @@ def test_can_zip_folder(exclude):
 
 
 def test_can_create_context_manager(patched_kedro_package):
-    with KedroContextManager("tests", "base") as mgr:
+    with KedroContextManager("tests", "local") as mgr:
         assert mgr is not None and isinstance(
             mgr, KedroContextManager
         ), "Invalid object returned"
@@ -35,15 +35,28 @@ def test_can_create_context_manager(patched_kedro_package):
 
 
 def test_can_create_context_manager_with_omegaconf(patched_kedro_package):
-    with KedroContextManager("tests", "base") as mgr:
+    with KedroContextManager("tests", "local") as mgr:
         with patch.object(mgr, "context") as context:
             context.mock_add_spec(KedroContext)
             context.config_loader = OmegaConfigLoader(
                 str(Path.cwd() / "conf"),
                 config_patterns={"snowflake": ["snowflake*"]},
-                default_run_env="base",
+                default_run_env="local",
             )
             assert isinstance(mgr.context, KedroContext), "No KedroContext"
             assert isinstance(
                 mgr.plugin_config, KedroSnowflakeConfig
             ), "Invalid plugin config"
+
+
+def test_raises_error_when_no_config(patched_kedro_package):
+    with KedroContextManager("tests", "missing_config") as mgr:
+        with patch.object(mgr, "context") as context:
+            context.mock_add_spec(KedroContext)
+            context.config_loader = OmegaConfigLoader(
+                str(Path.cwd() / "conf"),
+                config_patterns={"snowflake": ["snowflake*"]},
+                default_run_env="missing_config",
+            )
+            with pytest.raises(ValueError):
+                _ = mgr.plugin_config

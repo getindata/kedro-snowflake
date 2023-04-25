@@ -3,7 +3,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from time import monotonic, sleep
-from typing import List, Callable, Any, Optional
+from typing import List, Callable, Any
 import datetime as dt
 from snowflake.snowpark import Session
 from tabulate import tabulate
@@ -25,7 +25,7 @@ class KedroSnowflakePipeline:
         timeout_seconds: int = 600,
         echo_fn: Callable[[str], Any] = None,
         on_start_callback: Callable = None,
-    ) -> Optional[bool]:
+    ) -> bool:
         logger.info("Executing pipeline SQL")
         for sql in self.pipeline_tasks_sql + self.execute_sql:
             logger.debug(sql + os.linesep + os.linesep)
@@ -36,6 +36,8 @@ class KedroSnowflakePipeline:
 
         if wait_for_completion:
             return self._wait_for_completion(echo_fn, timeout_seconds)
+        else:
+            return True
 
     def _wait_for_completion(self, echo_fn, timeout_seconds):
         echo = echo_fn or (lambda s: None)
@@ -62,7 +64,12 @@ order by scheduled_time;
             ).to_pandas()
             return (
                 state,
-                tabulate(state, headers="keys", tablefmt="psql", showindex=False,),
+                tabulate(
+                    state,
+                    headers="keys",
+                    tablefmt="psql",
+                    showindex=False,
+                ),
             )
 
         while not finished and (monotonic() - start_ts) < timeout_seconds:
