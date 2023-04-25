@@ -8,7 +8,9 @@ import backoff
 import cloudpickle
 import zstandard as zstd
 from kedro.io import AbstractDataSet
-from snowflake.snowpark import Session, DataFrame as SnowParkDataFrame, functions as F
+from snowflake.snowpark import DataFrame as SnowParkDataFrame
+from snowflake.snowpark import Session
+from snowflake.snowpark import functions as F
 
 logger = logging.getLogger()
 
@@ -86,7 +88,8 @@ class SnowflakeStagePickleDataSet(AbstractDataSet):
     @backoff.on_exception(backoff.expo, Exception, max_time=60)
     def _load(self):
         with zstd.open(
-            self.snowflake_session.file.get_stream(self.target_path), "rb",
+            self.snowflake_session.file.get_stream(self.target_path),
+            "rb",
         ) as stream:
             return cloudpickle.load(stream)
 
@@ -100,7 +103,10 @@ class SnowflakeStagePickleDataSet(AbstractDataSet):
             buffer.seek(0)
             setattr(buffer, "name", self.target_name)
             self.snowflake_session.file.put_stream(
-                buffer, self.target_stage_location, auto_compress=False, overwrite=True,
+                buffer,
+                self.target_stage_location,
+                auto_compress=False,
+                overwrite=True,
             )
 
     def _describe(self) -> Dict[str, Any]:

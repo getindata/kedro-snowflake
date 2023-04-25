@@ -4,11 +4,10 @@ from pathlib import Path
 from typing import Tuple
 
 import click
-
 from kedro_snowflake.cli_functions import (
-    parse_extra_params,
-    parse_extra_env_params,
     context_and_pipeline,
+    parse_extra_env_params,
+    parse_extra_params,
 )
 from kedro_snowflake.config import CONFIG_TEMPLATE_YAML
 from kedro_snowflake.misc import CliContext
@@ -89,7 +88,10 @@ def init(
     default="__default__",
 )
 @click.option(
-    "--params", "params", type=str, help="Parameters override in form of JSON string",
+    "--params",
+    "params",
+    type=str,
+    help="Parameters override in form of JSON string",
 )
 @click.option(
     "--dry-run",

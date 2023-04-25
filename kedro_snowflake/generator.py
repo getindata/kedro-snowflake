@@ -5,16 +5,19 @@ import tempfile
 from collections import defaultdict
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional
 
 from kedro.pipeline import Pipeline
 from kedro.pipeline.node import Node
-from snowflake.snowpark.functions import sproc
-from snowflake.snowpark.session import Session
-
 from kedro_snowflake.config import KedroSnowflakeConfig
 from kedro_snowflake.pipeline import KedroSnowflakePipeline
-from kedro_snowflake.utils import zstd_folder, zip_dependencies, get_module_path
+from kedro_snowflake.utils import (
+    get_module_path,
+    zip_dependencies,
+    zstd_folder,
+)
+from snowflake.snowpark.functions import sproc
+from snowflake.snowpark.session import Session
 
 logger = logging.getLogger(__name__)
 
@@ -306,12 +309,13 @@ call {root_sproc}();
             node_names: Optional[List[str]],
             extra_params_json: str,
         ) -> str:
+            import json
             import sys
             import tarfile
-            import json
-            import zstandard as zstd
             from pathlib import Path
             from time import monotonic
+
+            import zstandard as zstd
 
             # This might be useful in near future ;)
             # IMPORT_DIRECTORY_NAME = "snowflake_import_directory"

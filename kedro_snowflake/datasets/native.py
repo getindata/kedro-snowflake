@@ -3,14 +3,15 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Dict, Any, Optional, Union
+from typing import Any, Dict, Optional, Union
+
 import snowflake.snowpark as sp
 from kedro.io import AbstractDataSet
 from kedro.io.core import (
-    parse_dataset_definition,
-    DataSetError,
     VERSION_KEY,
     VERSIONED_FLAG_KEY,
+    DataSetError,
+    parse_dataset_definition,
 )
 from omegaconf import DictConfig, OmegaConf
 

@@ -2,9 +2,9 @@ from kedro.pipeline import Pipeline, node, pipeline
 
 from .nodes import (
     create_model_input_table,
+    export_data_to_snowflake,
     preprocess_companies,
     preprocess_shuttles,
-    export_data_to_snowflake,
 )
 
 

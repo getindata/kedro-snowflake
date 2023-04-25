@@ -1,7 +1,7 @@
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
 import yaml
-from pydantic import BaseModel, root_validator, Field
+from pydantic import BaseModel, Field, root_validator
 
 KEDRO_SNOWFLAKE_CONFIG_PATTERN = "snowflake*"
 KEDRO_SNOWFLAKE_CONFIG_KEY = "snowflake"

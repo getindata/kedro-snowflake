@@ -1,13 +1,12 @@
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 from uuid import uuid4
 
 import pandas as pd
 import pytest
 from kedro.io import DataSetError
-from omegaconf import DictConfig
-
 from kedro_snowflake.datasets.internal import SnowflakeRunnerDataSet
 from kedro_snowflake.datasets.native import SnowflakeStageFileDataSet
+from omegaconf import DictConfig
 from snowflake.snowpark import DataFrame as SnowParkDataFrame
 
 

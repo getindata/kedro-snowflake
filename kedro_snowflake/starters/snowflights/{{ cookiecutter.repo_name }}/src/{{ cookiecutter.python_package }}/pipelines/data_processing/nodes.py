@@ -1,7 +1,8 @@
+from typing import Optional
+
 import pandas as pd
 import snowflake.snowpark as sp
 from snowflake.snowpark.functions import udf
-from typing import Optional
 
 
 def _is_true(x: pd.Series) -> pd.Series:
@@ -33,7 +34,9 @@ def preprocess_companies(companies: pd.DataFrame) -> pd.DataFrame:
     """
 
     @udf(
-        name="parse_percentage", is_permanent=False, replace=True,
+        name="parse_percentage",
+        is_permanent=False,
+        replace=True,
     )
     def parse_percentage(x: str) -> Optional[float]:
         return float(x.replace("%", "")) / 100.0 if x else None

@@ -1,19 +1,19 @@
 import os
 from collections import defaultdict
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from kedro.pipeline import Pipeline, pipeline, node
-from pytest import fixture
-
+from kedro.pipeline import Pipeline, node, pipeline
 from kedro_snowflake.config import (
+    DependenciesConfig,
     KedroSnowflakeConfig,
     SnowflakeConfig,
     SnowflakeConnectionConfig,
     SnowflakeRuntimeConfig,
-    DependenciesConfig,
 )
 from kedro_snowflake.generator import SnowflakePipelineGenerator
 from kedro_snowflake.misc import CliContext
+from pytest import fixture
+
 from tests.utils import identity
 
 

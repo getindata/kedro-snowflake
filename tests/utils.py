@@ -1,7 +1,7 @@
 import inspect
 from pathlib import Path
 from shutil import copy
-from typing import Callable, Any
+from typing import Any, Callable
 from unittest.mock import MagicMock
 
 import yaml

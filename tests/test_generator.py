@@ -1,10 +1,11 @@
 import json
 from unittest.mock import patch
-
-from snowflake.snowpark import Session
 from uuid import UUID
+
 from kedro_snowflake.generator import SnowflakePipelineGenerator
 from kedro_snowflake.pipeline import KedroSnowflakePipeline
+from snowflake.snowpark import Session
+
 from tests.utils import get_arg_type
 
 

@@ -1,27 +1,27 @@
 import importlib
+import os
 import shutil
 import tarfile
+import zipfile
 from functools import cached_property
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 from uuid import uuid4
-import zipfile
-import os
+
 import zstandard as zstd
 from kedro.config import (
     AbstractConfigLoader,
     ConfigLoader,
-    OmegaConfigLoader,
     MissingConfigException,
+    OmegaConfigLoader,
 )
 from kedro.framework.session import KedroSession
-from omegaconf import DictConfig, OmegaConf
-
 from kedro_snowflake.config import (
-    KedroSnowflakeConfig,
-    KEDRO_SNOWFLAKE_CONFIG_PATTERN,
     KEDRO_SNOWFLAKE_CONFIG_KEY,
+    KEDRO_SNOWFLAKE_CONFIG_PATTERN,
+    KedroSnowflakeConfig,
 )
+from omegaconf import DictConfig, OmegaConf
 
 
 def compress_folder_to_zip(path, zip_path, exclude=None):

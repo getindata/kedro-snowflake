@@ -1,10 +1,11 @@
+import datetime as dt
 import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from time import monotonic, sleep
-from typing import List, Callable, Any
-import datetime as dt
+from typing import Any, Callable, List
+
 from snowflake.snowpark import Session
 from tabulate import tabulate
 
