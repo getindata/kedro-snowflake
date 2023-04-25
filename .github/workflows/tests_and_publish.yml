@@ -62,7 +62,7 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: coverage-3.9
+        name: coverage-3.8
         path: .
 
     - name: SonarCloud Scan
