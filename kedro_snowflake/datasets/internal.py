@@ -36,7 +36,7 @@ class SnowflakeTransientTableDataSet(AbstractDataSet):
 
     def table_exists(self):
         result = self.snowflake_session._conn.run_query(
-            f"select 1 from information_schema.tables where UPPER(table_name) = UPPER(?)",
+            "select 1 from information_schema.tables where UPPER(table_name) = UPPER(?)",
             params=(self.table_name,),
         )
 
@@ -88,7 +88,8 @@ class SnowflakeStagePickleDataSet(AbstractDataSet):
     @backoff.on_exception(backoff.expo, Exception, max_time=60)
     def _load(self):
         with zstd.open(
-            self.snowflake_session.file.get_stream(self.target_path), "rb",
+            self.snowflake_session.file.get_stream(self.target_path),
+            "rb",
         ) as stream:
             return cloudpickle.load(stream)
 
@@ -102,7 +103,10 @@ class SnowflakeStagePickleDataSet(AbstractDataSet):
             buffer.seek(0)
             setattr(buffer, "name", self.target_name)
             self.snowflake_session.file.put_stream(
-                buffer, self.target_stage_location, auto_compress=False, overwrite=True,
+                buffer,
+                self.target_stage_location,
+                auto_compress=False,
+                overwrite=True,
             )
 
     def _describe(self) -> Dict[str, Any]:

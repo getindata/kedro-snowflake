@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from unittest.mock import call, patch
+from unittest.mock import patch
 from uuid import uuid4
 
 import yaml
@@ -15,7 +15,9 @@ from tests.utils import (
 
 
 def test_can_initialize_basic_plugin_config(
-    patched_kedro_package, cli_context, tmp_path: Path,
+    patched_kedro_package,
+    cli_context,
+    tmp_path: Path,
 ):
 
     config_path = create_kedro_conf_dirs(tmp_path)
@@ -81,7 +83,9 @@ def test_can_dry_run_pipeline(
         os.environ, {"SNOWFLAKE_PASSWORD": "test_password"}, clear=False
     ), patch.dict("kedro.framework.project.pipelines", {"__default__": dummy_pipeline}):
         result = runner.invoke(
-            cli.run, ["--dry-run", "-o", str(output_path.absolute())], obj=cli_context,
+            cli.run,
+            ["--dry-run", "-o", str(output_path.absolute())],
+            obj=cli_context,
         )
         assert result.exit_code == 0
 
@@ -120,7 +124,9 @@ def test_can_run_pipeline(
         os.environ, {"SNOWFLAKE_PASSWORD": "test_password"}, clear=False
     ), patch.dict("kedro.framework.project.pipelines", {"__default__": dummy_pipeline}):
         result = runner.invoke(
-            cli.run, ["-o", str(output_path.absolute())], obj=cli_context,
+            cli.run,
+            ["-o", str(output_path.absolute())],
+            obj=cli_context,
         )
         assert result.exit_code == 0
 

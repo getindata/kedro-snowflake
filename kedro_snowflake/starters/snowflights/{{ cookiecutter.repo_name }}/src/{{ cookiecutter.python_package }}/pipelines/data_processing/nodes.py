@@ -34,7 +34,9 @@ def preprocess_companies(companies: pd.DataFrame) -> pd.DataFrame:
     """
 
     @udf(
-        name="parse_percentage", is_permanent=False, replace=True,
+        name="parse_percentage",
+        is_permanent=False,
+        replace=True,
     )
     def parse_percentage(x: str) -> Optional[float]:
         return float(x.replace("%", "")) / 100.0 if x else None

@@ -61,6 +61,7 @@ def resolve_connection_params_from_config(mgr):
             )
 
         connection_params = mgr.plugin_config.snowflake.connection.copy(
-            exclude={"credentials", "password_from_env"}, update={"password": password},
+            exclude={"credentials", "password_from_env"},
+            update={"password": password},
         ).dict(by_alias=True)
     return connection_params

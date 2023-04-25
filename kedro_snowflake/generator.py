@@ -2,13 +2,11 @@ import logging
 import os
 import re
 import tempfile
-from collections import defaultdict
 from functools import cached_property
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from kedro.pipeline import Pipeline
-from kedro.pipeline.node import Node
 from kedro_snowflake.config import KedroSnowflakeConfig
 from kedro_snowflake.pipeline import KedroSnowflakePipeline
 from kedro_snowflake.utils import (
@@ -30,12 +28,12 @@ class SnowflakePipelineGenerator:
 create or replace task {task_name}
 warehouse = '{warehouse}'
 after {after_tasks}
-as 
+as
 {task_body};
 """.strip()
     TASK_BODY_TEMPLATE = """
 call {sproc_name}('{environment}', system$get_predecessor_return_value('{root_task_name}'), '{pipeline_name}', ARRAY_CONSTRUCT({nodes_to_run}), '{extra_params}')
-""".strip()
+""".strip()  # noqa: E501
 
     def __init__(
         self,
@@ -105,7 +103,10 @@ call {root_sproc}();
     def _sanitize_node_name(self, node_name: str) -> str:
         return re.sub(r"\W", "_", node_name)
 
-    def _generate_snowflake_tasks_sql(self, pipeline: Pipeline,) -> List[str]:
+    def _generate_snowflake_tasks_sql(
+        self,
+        pipeline: Pipeline,
+    ) -> List[str]:
         sql_statements = [self._generate_root_task_sql()]
 
         node_dependencies = (
@@ -147,7 +148,8 @@ call {root_sproc}();
     def generate(self) -> KedroSnowflakePipeline:
         """Generate a SnowflakePipeline object from a Kedro pipeline.
         It can be used to run the pipeline or just to get the SQL statements.
-        Note that the pipeline is not executed, it is just translated to SQL statements, but the stored procedures ARE created.
+        Note that the pipeline is not executed, it is just translated to SQL statements,
+        but the stored procedures ARE created.
         """
 
         pipeline = self.get_kedro_pipeline()
@@ -195,7 +197,7 @@ call {root_sproc}();
             )
 
             logger.info("Creating Kedro Snowflake root sproc")
-            root_sproc = self._construct_kedro_snowflake_root_sproc(
+            root_sproc = self._construct_kedro_snowflake_root_sproc(  # noqa: F841
                 snowflake_stage_name
             )
 
@@ -240,7 +242,10 @@ call {root_sproc}();
     def _package_dependencies(self, dependencies_dir, project_files_dir):
         # Package dependencies that work with Snowpark's import
         zip_dependencies(
-            ["toposort",], dependencies_dir,
+            [
+                "toposort",
+            ],
+            dependencies_dir,
         )
         # Special packages that need to be extracted into PYTHONPATH at runtime (imports don't work)
         special_packages = self.config.snowflake.runtime.dependencies.imports

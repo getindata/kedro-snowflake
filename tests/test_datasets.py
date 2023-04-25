@@ -61,10 +61,16 @@ def test_can_use_snowflake_stage_wrapped_dataset(
             credentials=MagicMock(),
         ),
         lambda: SnowflakeStageFileDataSet(
-            "@TEST_STAGE", "my/file.txt", None, credentials=MagicMock(),
+            "@TEST_STAGE",
+            "my/file.txt",
+            None,
+            credentials=MagicMock(),
         ),
         lambda: SnowflakeStageFileDataSet(
-            "@TEST_STAGE", "my/file.txt", {"asd": 123}, credentials=MagicMock(),
+            "@TEST_STAGE",
+            "my/file.txt",
+            {"asd": 123},
+            credentials=MagicMock(),
         ),
         lambda: SnowflakeStageFileDataSet(
             "@TEST_STAGE", "my/file.txt", "pandas.CSVDataSet"

@@ -1,5 +1,4 @@
 import os
-from collections import defaultdict
 from unittest.mock import MagicMock, patch
 
 from kedro.pipeline import Pipeline, node, pipeline
@@ -65,7 +64,7 @@ def patched_kedro_package():
 def patched_snowflake_pipeline_generator(
     mock_plugin_config: KedroSnowflakeConfig, dummy_pipeline
 ):
-    with patch("snowflake.snowpark.session.Session") as session, patch.dict(
+    with patch("snowflake.snowpark.session.Session"), patch.dict(
         os.environ, {"SNOWFLAKE_PASSWORD": "test_password"}
     ), patch.dict(
         "kedro.framework.project.pipelines",

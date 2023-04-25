@@ -93,7 +93,7 @@ CONFIG_TEMPLATE_YAML = """
 snowflake:
   connection:
     # Either credentials name (Reference to a key in credentials.yml as in standard Kedro)
-    # or leave 
+    # or leave
     # credentials: ~
     # and specify rest of the fields
     credentials: ~
@@ -108,16 +108,16 @@ snowflake:
   runtime:
     # Default schedule for Kedro tasks
     schedule: "11520 minute"
-    
+
     # Optional suffix for all kedro stored procedures
     stored_procedure_name_suffix: ""
-    
+
     # Names of the stages
     # `stage` is for stored procedures etc.
     # `temporary_stage` is for temporary data serialization
     stage: "@KEDRO_SNOWFLAKE_STAGE"
     temporary_stage: '@KEDRO_SNOWFLAKE_TEMP_DATA_STAGE'
-    
+
     # List of Python packages and imports to be used by the project
     # We recommend that this list will be add-only, and not modified
     # as it may break the project once deployed to Snowflake.

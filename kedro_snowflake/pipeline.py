@@ -65,7 +65,12 @@ order by scheduled_time;
             ).to_pandas()
             return (
                 state,
-                tabulate(state, headers="keys", tablefmt="psql", showindex=False,),
+                tabulate(
+                    state,
+                    headers="keys",
+                    tablefmt="psql",
+                    showindex=False,
+                ),
             )
 
         while not finished and (monotonic() - start_ts) < timeout_seconds:

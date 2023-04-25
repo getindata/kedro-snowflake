@@ -13,7 +13,6 @@ from kedro.config import (
     AbstractConfigLoader,
     ConfigLoader,
     MissingConfigException,
-    OmegaConfigLoader,
 )
 from kedro.framework.session import KedroSession
 from kedro_snowflake.config import (
@@ -105,7 +104,7 @@ class KedroContextManager:
         cl: AbstractConfigLoader = self.context.config_loader
         try:
             obj = self.context.config_loader.get(KEDRO_SNOWFLAKE_CONFIG_PATTERN)
-        except:
+        except:  # noqa
             obj = None
 
         if obj is None:
@@ -121,7 +120,8 @@ class KedroContextManager:
                 raise ValueError(
                     f"You're using a custom config loader: {cl.__class__.__qualname__}{os.linesep}"
                     f"you need to add the snowflake config to it.{os.linesep}"
-                    f"Make sure you add snowflake* to config_pattern in CONFIG_LOADER_ARGS in the settings.py file.{os.linesep}"
+                    "Make sure you add snowflake* to config_pattern in CONFIG_LOADER_ARGS "
+                    f"in the settings.py file.{os.linesep}"
                     """Example:
 CONFIG_LOADER_ARGS = {
     # other args
