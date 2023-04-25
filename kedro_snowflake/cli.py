@@ -88,10 +88,7 @@ def init(
     default="__default__",
 )
 @click.option(
-    "--params",
-    "params",
-    type=str,
-    help="Parameters override in form of JSON string",
+    "--params", "params", type=str, help="Parameters override in form of JSON string",
 )
 @click.option(
     "--dry-run",

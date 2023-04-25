@@ -105,10 +105,7 @@ call {root_sproc}();
     def _sanitize_node_name(self, node_name: str) -> str:
         return re.sub(r"\W", "_", node_name)
 
-    def _generate_snowflake_tasks_sql(
-        self,
-        pipeline: Pipeline,
-    ) -> List[str]:
+    def _generate_snowflake_tasks_sql(self, pipeline: Pipeline,) -> List[str]:
         sql_statements = [self._generate_root_task_sql()]
 
         node_dependencies = (
@@ -243,10 +240,7 @@ call {root_sproc}();
     def _package_dependencies(self, dependencies_dir, project_files_dir):
         # Package dependencies that work with Snowpark's import
         zip_dependencies(
-            [
-                "toposort",
-            ],
-            dependencies_dir,
+            ["toposort",], dependencies_dir,
         )
         # Special packages that need to be extracted into PYTHONPATH at runtime (imports don't work)
         special_packages = self.config.snowflake.runtime.dependencies.imports
