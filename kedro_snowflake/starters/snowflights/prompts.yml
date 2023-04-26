@@ -7,6 +7,7 @@ project_name:
   error_message: |
     It must contain only alphanumeric symbols, spaces, underscores and hyphens and
     be at least 2 characters long.
+
 snowflake_account:
   title: "Snowflake Account"
   text: |
@@ -16,13 +17,15 @@ snowflake_account:
   error_message: |
     It must contain only alphanumeric symbols and hyphens and
     be at least 2 characters long.
+
 snowflake_user:
   title: "Snowflake User"
   text: |
     Please enter the name of your Snowflake user.
   regex_validator: "^\\w+$"
   error_message: |
-    It must contain only alphanumeric symbols and hyphens
+    It must contain only alphanumeric symbols and hyphen
+
 snowflake_warehouse:
   title: "Snowflake Warehouse"
   text: |
@@ -30,6 +33,7 @@ snowflake_warehouse:
   regex_validator: "^\\w+$"
   error_message: |
     It must contain only alphanumeric symbols and hyphens
+
 snowflake_database:
   title: "Snowflake Database"
   text: |
@@ -37,6 +41,7 @@ snowflake_database:
   regex_validator: "^\\w+$"
   error_message: |
     It must contain only alphanumeric symbols and hyphens
+
 snowflake_schema:
   title: "Snowflake Schema"
   text: |
@@ -44,6 +49,7 @@ snowflake_schema:
   regex_validator: "^\\w+$"
   error_message: |
     It must contain only alphanumeric symbols and hyphens
+
 snowflake_password_env_variable:
   title: "Snowflake Password Environment Variable"
   text: |

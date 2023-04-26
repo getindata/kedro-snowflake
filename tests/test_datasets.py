@@ -25,8 +25,9 @@ from snowflake.snowpark import DataFrame as SnowParkDataFrame
 def test_can_use_snowflake_stage_wrapped_dataset(
     sp, dataset_to_wrap, data_example, tmpdir
 ):
-    TemporaryDirectoryMock = MagicMock()
-    TemporaryDirectoryMock.__enter__.return_value = tmpdir
+    TemporaryDirectoryMock = Mock(
+        return_value=Mock(__enter__=lambda _: tmpdir, __exit__=lambda *_: None)
+    )
 
     with patch(
         "kedro_snowflake.datasets.native.TemporaryDirectory", TemporaryDirectoryMock

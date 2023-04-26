@@ -15,6 +15,21 @@
   <h3 align="center">We help companies turn their data into assets</h3>
 </p>
 
-# Coming soon!
-Stay tuned or connect with us directly.
+## About
+This plugin allows to run full Kedro pipelines in Snowflake. Right now it supports
+* Kedro starter, to get you up to speed fast
+* automatically creating Snowflake Stored Procedures from Kedro nodes (using Snowpark SDK)
+* translating Kedro pipeline into Snowflake tasks graph
+* running Kedro pipeline fully within Snowflake, without external system
+* using Kedro's official `SnowparkTableDataSet`
+* automatically storing intermediate data as Transient Tables (if Snowpark's DataFrames are used)
 
+## Documentation
+For detailed documentation refer to https://kedro-snowflake.readthedocs.io/
+
+## Usage
+### With starter
+Create new project with our Kedro starter ❄️ _Snowflights_ 🚀:
+```bash
+kedro new --starter=snowflights --checkout=master
+```
