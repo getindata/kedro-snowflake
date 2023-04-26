@@ -31,10 +31,10 @@ class SnowflakeStageFileDataSet(AbstractDataSet):
      | - ``dataset``: a dictionary for configuring the underlying dataset.
      |  It can be either a string with only dataset name (e.g. "pandas.CSVDataSet")
      |  or a dictionary with the same structure as you would use in the Kedro catalog.yml.
-     | - ``filepath_arg``: Name of the argument in the underlying dataset that accepts the filepath (default is *filepath*).
+     | - ``filepath_arg``: Name of the argument in the underlying dataset that accepts the filepath (default is *filepath*). # noqa
      | - ``database``: Name of the Snowflake database. If not specified, will attempt to load from the credentials.
      | - ``schema``: Name of the Snowflake schema. If not specified, will attempt to load from the credentials.
-     | - ``credentials``: Credentials to use to load/save data from Snowflake. Can be used instead of *schema*/*database*
+     | - ``credentials``: Credentials to use to load/save data from Snowflake. Can be used instead of *schema*/*database* # noqa
       in the same fashion as in the ``kedro_datasets.snowflake.snowpark_dataset.SnowparkTableDataSet``.
 
     Example

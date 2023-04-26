@@ -4,6 +4,7 @@ import re
 from contextlib import contextmanager
 
 import click
+
 from kedro_snowflake.generator import SnowflakePipelineGenerator
 from kedro_snowflake.utils import KedroContextManager
 

@@ -7,6 +7,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from kedro.pipeline import Pipeline
+from snowflake.snowpark.functions import sproc
+from snowflake.snowpark.session import Session
+
 from kedro_snowflake.config import KedroSnowflakeConfig
 from kedro_snowflake.pipeline import KedroSnowflakePipeline
 from kedro_snowflake.utils import (
@@ -14,8 +17,6 @@ from kedro_snowflake.utils import (
     zip_dependencies,
     zstd_folder,
 )
-from snowflake.snowpark.functions import sproc
-from snowflake.snowpark.session import Session
 
 logger = logging.getLogger(__name__)
 

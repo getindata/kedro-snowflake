@@ -5,9 +5,9 @@ from uuid import uuid4
 
 import yaml
 from click.testing import CliRunner
+
 from kedro_snowflake import cli
 from kedro_snowflake.config import KedroSnowflakeConfig
-
 from tests.utils import (
     create_kedro_conf_dirs,
     has_any_calls_matching_predicate,

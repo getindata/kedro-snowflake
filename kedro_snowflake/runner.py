@@ -3,9 +3,10 @@ from typing import Any, Dict
 from kedro.io import AbstractDataSet, DataCatalog
 from kedro.pipeline import Pipeline
 from kedro.runner import SequentialRunner
-from kedro_snowflake.datasets.internal import SnowflakeRunnerDataSet
 from pluggy import PluginManager
 from snowflake.snowpark import Session
+
+from kedro_snowflake.datasets.internal import SnowflakeRunnerDataSet
 
 
 class SnowflakeRunner(SequentialRunner):

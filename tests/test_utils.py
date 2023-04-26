@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from kedro.config import OmegaConfigLoader
 from kedro.framework.context import KedroContext
+
 from kedro_snowflake.config import KedroSnowflakeConfig
 from kedro_snowflake.utils import KedroContextManager, compress_folder_to_zip
 

@@ -4,10 +4,11 @@ from uuid import uuid4
 import pandas as pd
 import pytest
 from kedro.io import DataSetError
-from kedro_snowflake.datasets.internal import SnowflakeRunnerDataSet
-from kedro_snowflake.datasets.native import SnowflakeStageFileDataSet
 from omegaconf import DictConfig
 from snowflake.snowpark import DataFrame as SnowParkDataFrame
+
+from kedro_snowflake.datasets.internal import SnowflakeRunnerDataSet
+from kedro_snowflake.datasets.native import SnowflakeStageFileDataSet
 
 
 @pytest.mark.parametrize(

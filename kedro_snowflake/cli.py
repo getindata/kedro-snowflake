@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Tuple
 
 import click
+
 from kedro_snowflake.cli_functions import (
     context_and_pipeline,
     parse_extra_env_params,
