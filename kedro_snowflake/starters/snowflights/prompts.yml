@@ -22,7 +22,7 @@ snowflake_user:
   title: "Snowflake User"
   text: |
     Please enter the name of your Snowflake user.
-  regex_validator: "^\\w+$"
+  regex_validator: "^[\\w-]+$"
   error_message: |
     It must contain only alphanumeric symbols and hyphen
 
@@ -30,7 +30,7 @@ snowflake_warehouse:
   title: "Snowflake Warehouse"
   text: |
     Please enter the name of your Snowflake warehouse.
-  regex_validator: "^\\w+$"
+  regex_validator: "^[\\w-]+$"
   error_message: |
     It must contain only alphanumeric symbols and hyphens
 
