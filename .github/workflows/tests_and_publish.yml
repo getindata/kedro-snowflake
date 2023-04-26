@@ -1,0 +1,203 @@
+name: "Test and Publish"
+
+on:
+  push:
+    branches: 
+      - master
+      - develop
+    paths-ignore:
+      - "docs/**"
+  pull_request:
+    branches:
+      - master
+      - develop
+    paths-ignore:
+      - "docs/**"
+
+jobs:
+  unit_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.8']
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Setup python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2.2.1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Setup poetry
+      run: |
+        python -V
+        python -m pip install poetry
+   
+    - name: Check pre-commit status
+      run: |
+        poetry install -v
+        poetry run pre-commit run --all-files
+
+    - name: Test with tox
+      run: |
+        pip install tox-pip-version tox-gh-actions "tox<4.0.0"
+        tox -v
+
+    - name: Store coverage reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-${{ matrix.python-version }}
+        path: coverage.xml
+        if-no-files-found: error
+
+  starter_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.8']
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2.2.1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Setup poetry
+      run: |
+        python -V
+        python -m pip install poetry
+
+    - name: Build the package
+      run: |
+        poetry build -f sdist
+
+    - name: Test creating project from starter
+      run: |
+        pip install $(find "./dist" -name "*.tar.gz")
+        cat << EOF > prompts.yml
+        project_name: "snowflights"
+        snowflake_account: "abc-123"
+        snowflake_user: "metallica"
+        snowflake_warehouse: "DEFAULT"
+        snowflake_database: "KEDRO"
+        snowflake_schema: "PUBLIC"
+        snowflake_password_env_variable: "ENV_WITH_PASSWORD"
+        EOF
+        kedro new --starter=snowflights --checkout=develop --verbose --config=prompts.yml
+        test -f snowflights/conf/base/snowflake.yml
+    
+    
+
+  sonarcloud:
+    runs-on: ubuntu-latest
+    needs: [unit_tests, starter_tests]
+    steps:
+
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: coverage-3.8
+        path: .
+
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@master
+      with:
+        projectBaseDir: ${{ github.workspace }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+
+  codeql:
+    runs-on: ubuntu-latest
+    needs: unit_tests
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  ### PROJECT SPECIFIC CONFIGURATION HERE
+
+  publish:
+    # only run on push to master
+    if: github.event.pull_request == null && github.ref == 'refs/heads/master'
+    needs: [unit_tests, codeql]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.8 ]
+    env:
+      PYTHON_PACKAGE: kedro_snowflake
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # necessary to enable merging, all the history is needed
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Build package dist from source # A better way will be : https://packaging.python.org/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/ but pep 517 is still marked as experimental
+        run: |
+          pip install poetry
+          poetry build
+      - name: Merge back to develop  # we have to set the config first on a fresh machine
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git checkout -B develop --track origin/develop
+          git merge master
+          git push
+      - name: Set dynamically package version as output variable # see https://github.com/actions/create-release/issues/39
+        # see https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+        id: set_package_version
+        run: |
+          echo "::set-output name=PACKAGE_VERSION::$(cat $PYTHON_PACKAGE/__init__.py | grep -Po  '\d+\.\d+\.\d+')"
+      - name: Create temporary file with the body content for the release
+        run: |
+          grep -Poz "## \[${{steps.set_package_version.outputs.PACKAGE_VERSION}}] - \d{4}-\d{2}-\d{2}[\S\s]+?(?=## \[\d+\.\d+\.\d+\]|\[.+\]:)" CHANGELOG.md > release_body.md
+      - name: Create Release # https://github.com/actions/create-release
+        id: create_release
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ steps.set_package_version.outputs.PACKAGE_VERSION }}
+          release_name: Release ${{ steps.set_package_version.outputs.PACKAGE_VERSION }}
+          body_path: ./release_body.md
+          draft: false
+          prerelease: false
+      - name: Rollback Release in case of run failure
+        if: failure() && steps.create_release.outputs.id != ''
+        uses: author/action-rollback@stable
+        with:
+          # Using a known release ID
+          release_id: ${{ steps.create_release.outputs.id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish distribution to PyPI  # official action from python maintainers
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_PASSWORD }}
+          verbose: true  # trace if the upload fails

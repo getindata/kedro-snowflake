@@ -172,5 +172,6 @@ terraform/.terraform/providers/registry.terraform.io/hashicorp/google/4.21.0/dar
 terraform/terraform.tfstate
 
 .idea
-conf/azure/credentials.yml
-
+conf/local/credentials.yml
+conf/snowflake/credentials.yml
+docs-render

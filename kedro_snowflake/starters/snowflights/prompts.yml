@@ -1,0 +1,60 @@
+project_name:
+  title: "Project Name"
+  text: |
+    Please enter a human readable name for your new project.
+    Spaces, hyphens, and underscores are allowed.
+  regex_validator: "^[\\w -]{2,}$"
+  error_message: |
+    It must contain only alphanumeric symbols, spaces, underscores and hyphens and
+    be at least 2 characters long.
+
+snowflake_account:
+  title: "Snowflake Account"
+  text: |
+    Please enter the name of your Snowflake account.
+    This is the part of the URL before .snowflakecomputing.com
+  regex_validator: "^[A-Za-z0-9-]{2,}$"
+  error_message: |
+    It must contain only alphanumeric symbols and hyphens and
+    be at least 2 characters long.
+
+snowflake_user:
+  title: "Snowflake User"
+  text: |
+    Please enter the name of your Snowflake user.
+  regex_validator: "^[\\w-]+$"
+  error_message: |
+    It must contain only alphanumeric symbols and hyphen
+
+snowflake_warehouse:
+  title: "Snowflake Warehouse"
+  text: |
+    Please enter the name of your Snowflake warehouse.
+  regex_validator: "^[\\w-]+$"
+  error_message: |
+    It must contain only alphanumeric symbols and hyphens
+
+snowflake_database:
+  title: "Snowflake Database"
+  text: |
+    Please enter the name of your Snowflake database.
+  regex_validator: "^\\w+$"
+  error_message: |
+    It must contain only alphanumeric symbols and hyphens
+
+snowflake_schema:
+  title: "Snowflake Schema"
+  text: |
+    Please enter the name of your Snowflake schema.
+  regex_validator: "^\\w+$"
+  error_message: |
+    It must contain only alphanumeric symbols and hyphens
+
+snowflake_password_env_variable:
+  title: "Snowflake Password Environment Variable"
+  text: |
+    Please enter the name of the environment variable that contains your Snowflake password.
+    Alternatively, you can re-configure the plugin later to use Kedro's credentials.yml
+  regex_validator: "^[A-Za-z0-9\\_]+$"
+  error_message: |
+    It must contain only alphanumeric symbols and underscores

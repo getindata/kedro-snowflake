@@ -1,0 +1,12 @@
+{
+    "project_name": "Snowflights",
+    "repo_name": "{{ cookiecutter.project_name.strip().replace(' ', '-').replace('_', '-').lower() }}",
+    "python_package": "{{ cookiecutter.project_name.strip().replace(' ', '_').replace('-', '_').lower() }}",
+    "kedro_version": "{{ cookiecutter.kedro_version }}",
+    "snowflake_account": "",
+    "snowflake_user": "",
+    "snowflake_warehouse": "",
+    "snowflake_database": "KEDRO",
+    "snowflake_schema": "PUBLIC",
+    "snowflake_password_env_variable": "SNOWFLAKE_PASSWORD"
+}
