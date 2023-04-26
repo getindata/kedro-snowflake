@@ -19,7 +19,40 @@ logger = logging.getLogger(__name__)
 
 
 class SnowflakeStageFileDataSet(AbstractDataSet):
-    # init with params: snowflake_stage, path, dataset, filepath_arg
+    """
+    Dataset providing an integration with *most* of the standard Kedro file-based datasets.
+    It allows to store/load data from Snowflake stage for any underlying dataset, e.g. pandas.CSVDataSet etc.
+
+    Args
+    ----
+
+     | - ``stage``: Name of the Snowflake stage. Must start with ``@``.
+     | - ``filepath``: Path to the file in the Snowflake stage.
+     | - ``dataset``: a dictionary for configuring the underlying dataset.
+     |  It can be either a string with only dataset name (e.g. "pandas.CSVDataSet")
+     |  or a dictionary with the same structure as you would use in the Kedro catalog.yml.
+     | - ``filepath_arg``: Name of the argument in the underlying dataset that accepts the filepath (default is *filepath*).
+     | - ``database``: Name of the Snowflake database. If not specified, will attempt to load from the credentials.
+     | - ``schema``: Name of the Snowflake schema. If not specified, will attempt to load from the credentials.
+     | - ``credentials``: Credentials to use to load/save data from Snowflake. Can be used instead of *schema*/*database*
+      in the same fashion as in the ``kedro_datasets.snowflake.snowpark_dataset.SnowparkTableDataSet``.
+
+    Example
+    -------
+
+    Example of a catalog.yml entry:
+
+    .. code-block:: yaml
+
+        preprocessed_shuttles:
+          type: kedro_snowflake.datasets.native.SnowflakeStageFileDataSet
+          stage: "@KEDRO_SNOWFLAKE_TEMP_DATA_STAGE"
+          filepath: data/02_intermediate/preprocessed_shuttles.csv
+          credentials: snowflake
+          dataset:
+            type: pandas.CSVDataSet
+    """
+
     def __init__(
         self,
         stage: str,

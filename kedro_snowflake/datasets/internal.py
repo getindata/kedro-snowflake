@@ -104,7 +104,7 @@ class SnowflakeStagePickleDataSet(AbstractDataSet):
             setattr(buffer, "name", self.target_name)
             self.snowflake_session.file.put_stream(
                 buffer,
-                self.target_stage_location,
+                self.target_path,
                 auto_compress=False,
                 overwrite=True,
             )
