@@ -15,8 +15,6 @@ Install the plugin (it automatically installs Kedro in a supported version)
 $ pip install "kedro-snowflake>=0.1.0"
 ```
 
-Optionally, extra can be specified: `kedro-azureml[mlflow]`.
-
 ### Install from sources
 
 You may want to install the develop branch which has unreleased features:
