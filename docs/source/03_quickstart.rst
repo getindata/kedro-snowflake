@@ -26,14 +26,14 @@ You will also need:
 
 .. code:: console
 
-   pip install "kedro-snowflake>=0.1.0"
+   pip install "kedro-snowflake>=0.1.2"
 
 
 3. Create new project from our starter
 
 .. code:: console
 
-   kedro new --starter=snowflights
+   kedro new --starter=snowflights --checkout=0.1.2
 
     Project Name
     ============

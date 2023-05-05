@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2023-05-05
+
+-   Update quickstart guide
+
 ## [0.1.1] - 2023-04-26
 
 -   Initial working release  
@@ -15,7 +19,9 @@
 
 -   Project seed prepared
 
-[Unreleased]: https://github.com/getindata/kedro-snowflake/compare/0.1.1...HEAD
+[Unreleased]: https://github.com/getindata/kedro-snowflake/compare/0.1.2...HEAD
+
+[0.1.2]: https://github.com/getindata/kedro-snowflake/compare/0.1.1...0.1.2
 
 [0.1.1]: https://github.com/getindata/kedro-snowflake/compare/0.1.0...0.1.1
 
