@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+-   📝 Update quickstart guide
 
 ## [0.1.2] - 2023-05-05
 
