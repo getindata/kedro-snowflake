@@ -4,6 +4,7 @@
 
 * Python 3.8 is a must ⚠️ - this is enforced by the `snowflake-snowpark-python` package. Refer to [Snowflake documentation](https://docs.snowflake.com/en/developer-guide/snowpark/python/setup) for more details. 
 * A tool to manage Python virtual environments (e.g. venv, conda, virtualenv). Anaconda is recommended by Snowflake.
+* Enable [Anaconda](https://docs.snowflake.com/en/developer-guide/udf/python/udf-python-packages#using-third-party-packages-from-anaconda) inside Snowflake
 
 ## Plugin installation
 
