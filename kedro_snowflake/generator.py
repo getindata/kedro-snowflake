@@ -153,11 +153,11 @@ call {root_sproc}();
             pipeline.node_dependencies
         )  # <-- this one is not topological
         for node in pipeline.nodes:  # <-- this one is topological
-            after_tasks = (
-                [self._root_task_name]
-                if not self.mlflow_enabled
-                else [self._mlflow_root_task_name]
-            ) + [self._sanitize_node_name(n.name) for n in node_dependencies[node]]
+            after_tasks = [self._root_task_name] + [
+                self._sanitize_node_name(n.name) for n in node_dependencies[node]
+            ]
+            if self.mlflow_enabled:
+                after_tasks.append(self._mlflow_root_task_name)
             sql_statements.append(
                 self._generate_task_sql(
                     self._sanitize_node_name(node.name),
@@ -167,6 +167,7 @@ call {root_sproc}();
                     self.extra_params,
                 )
             )
+
         return sql_statements
 
     def _generate_task_execute_sql(self):
