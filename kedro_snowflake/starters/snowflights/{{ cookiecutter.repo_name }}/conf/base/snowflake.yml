@@ -60,6 +60,7 @@ snowflake:
       - more-itertools
       - openpyxl
       - backoff
+      - pydantic
     # Optionally provide mapping for user-friendly pipeline names
     pipeline_name_mapping:
      __default__: default

@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import re
@@ -7,6 +8,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from kedro.pipeline import Pipeline
+from snowflake.snowpark.functions import sproc
+from snowflake.snowpark.session import Session
+
 from kedro_snowflake.config import KedroSnowflakeConfig
 from kedro_snowflake.pipeline import KedroSnowflakePipeline
 from kedro_snowflake.utils import (
@@ -14,8 +18,6 @@ from kedro_snowflake.utils import (
     zip_dependencies,
     zstd_folder,
 )
-from snowflake.snowpark.functions import sproc
-from snowflake.snowpark.session import Session
 
 logger = logging.getLogger(__name__)
 
@@ -339,6 +341,7 @@ call {root_sproc}();
                 f"SELECT {experiment_get_by_name_func}('{experiment_name}'):body.experiments[0].experiment_id"
             ).collect()[0][0]
         )
+        mlflow_config = self.config.snowflake.mlflow.dict()
 
         def mlflow_start_run(session: Session) -> str:
             run_id = eval(
@@ -346,7 +349,11 @@ call {root_sproc}();
                     f"SELECT {run_create_func}({experiment_id}):body.run.info.run_id"
                 ).collect()[0][0]
             )
-            session.sql(f"call system$set_return_value('{run_id}');").collect()
+            mlflow_config["run_id"] = run_id
+            mlflow_config_json = json.dumps(mlflow_config)
+            session.sql(
+                f"call system$set_return_value('{mlflow_config_json}');"
+            ).collect()
             return run_id
 
         return sproc(

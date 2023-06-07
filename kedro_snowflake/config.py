@@ -91,6 +91,7 @@ class MLflowFunctionsConfig(BaseModel):
 class SnowflakeMLflowConfig(BaseModel):
     experiment_name: Optional[str]
     functions: MLflowFunctionsConfig
+    run_id: Optional[str]
 
 
 class SnowflakeConfig(BaseModel):
