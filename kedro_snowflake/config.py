@@ -92,7 +92,7 @@ class SnowflakeMLflowConfig(BaseModel):
     experiment_name: Optional[str]
     functions: MLflowFunctionsConfig
     run_id: Optional[str]
-    stage_name: Optional[str]
+    stage: Optional[str]
 
 
 class SnowflakeConfig(BaseModel):
@@ -169,6 +169,7 @@ snowflake:
       - more-itertools
       - openpyxl
       - backoff
+      - pydantic
     # Optionally provide mapping for user-friendly pipeline names
     pipeline_name_mapping:
      __default__: default
@@ -176,7 +177,7 @@ snowflake:
   # or leave empty
   mlflow:
     experiment_name: ~
-    stage_name: ~
+    stage: ~
     # Snowflake external functions needed for calling MLflow instance
     functions:
         experiment_get_by_name: mlflow_experiment_get_by_name

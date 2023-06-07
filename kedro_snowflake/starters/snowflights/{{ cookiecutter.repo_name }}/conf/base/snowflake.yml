@@ -68,6 +68,7 @@ snowflake:
   # or leave empty
   mlflow:
     experiment_name: ~
+    stage: "MLFLOW_STAGE"
     # Snowflake external functions needed for calling MLflow instance
     functions:
       experiment_get_by_name: mlflow_experiment_get_by_name

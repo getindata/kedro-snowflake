@@ -68,6 +68,6 @@ def log_model(model: RandomForestRegressor, X_train: pd.DataFrame, y_train: pd.S
         model.fit(X_train, y_train)
         session = _get_current_session()
         session.file.put(f"/tmp/mlruns/{local_exp_id}/{local_run_id}/artifacts/model/*",
-                         f"@{mlflow_config.stage_name}/{exp_id}/{run_id}/artifacts/model/",
+                         f"{mlflow_config.stage}/{exp_id}/{run_id}/artifacts/model/",
                          auto_compress=False)
         return model
