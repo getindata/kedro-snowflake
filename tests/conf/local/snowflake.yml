@@ -66,6 +66,7 @@ snowflake:
      __default__: default
   mlflow:
     experiment_name: ~
+    stage_name: ~
     functions:
       experiment_get_by_name: mlflow_experiment_get_by_name
       run_create: mlflow_run_create
