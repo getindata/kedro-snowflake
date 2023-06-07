@@ -92,7 +92,7 @@ class SnowflakeMLflowConfig(BaseModel):
     experiment_name: Optional[str]
     functions: MLflowFunctionsConfig
     run_id: Optional[str]
-    stage_name: str = "mlflow_stage"
+    stage_name: Optional[str]
 
 
 class SnowflakeConfig(BaseModel):
