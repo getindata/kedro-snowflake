@@ -92,6 +92,7 @@ class SnowflakeMLflowConfig(BaseModel):
     experiment_name: Optional[str]
     functions: MLflowFunctionsConfig
     run_id: Optional[str]
+    stage_name: str
 
 
 class SnowflakeConfig(BaseModel):
@@ -175,6 +176,7 @@ snowflake:
   # or leave empty
   mlflow:
     experiment_name: ~
+    stage_name: ~
     # Snowflake external functions needed for calling MLflow instance
     functions:
         experiment_get_by_name: mlflow_experiment_get_by_name
