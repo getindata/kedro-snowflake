@@ -336,19 +336,19 @@ call {root_sproc}();
             self.config.snowflake.mlflow.functions.experiment_get_by_name
         )
         run_create_func = self.config.snowflake.mlflow.functions.run_create
-        experiment_id = eval(
+        experiment_id = (
             self.snowflake_session.sql(
                 f"SELECT {experiment_get_by_name_func}('{experiment_name}'):body.experiments[0].experiment_id"
             ).collect()[0][0]
-        )
+        ).strip(" \"'\t\r\n")
         mlflow_config = self.config.snowflake.mlflow.dict()
 
         def mlflow_start_run(session: Session) -> str:
-            run_id = eval(
+            run_id = (
                 session.sql(
                     f"SELECT {run_create_func}({experiment_id}):body.run.info.run_id"
                 ).collect()[0][0]
-            )
+            ).strip(" \"'\t\r\n")
             mlflow_config["run_id"] = run_id
             mlflow_config_json = json.dumps(mlflow_config)
             session.sql(
