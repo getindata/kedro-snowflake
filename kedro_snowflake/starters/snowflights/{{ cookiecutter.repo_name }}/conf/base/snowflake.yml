@@ -73,5 +73,6 @@ snowflake:
     functions:
       experiment_get_by_name: mlflow_experiment_get_by_name
       run_create: mlflow_run_create
+      run_update: mlflow_run_update
       run_log_metric: mlflow_run_log_metric
       run_log_parameter: mlflow_run_log_parameter

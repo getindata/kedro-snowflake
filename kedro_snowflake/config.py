@@ -84,6 +84,7 @@ class SnowflakeRuntimeConfig(BaseModel):
 class MLflowFunctionsConfig(BaseModel):
     experiment_get_by_name: str = "mlflow_experiment_get_by_name"
     run_create: str = "mlflow_run_create"
+    run_update: str = "mlflow_run_update"
     run_log_metric: str = "mlflow_run_log_metric"
     run_log_parameter: str = "mlflow_run_log_parameter"
 
@@ -182,6 +183,7 @@ snowflake:
     functions:
         experiment_get_by_name: mlflow_experiment_get_by_name
         run_create: mlflow_run_create
+        run_update: mlflow_run_update
         run_log_metric: mlflow_run_log_metric
         run_log_parameter: mlflow_run_log_parameter
 """.strip()
