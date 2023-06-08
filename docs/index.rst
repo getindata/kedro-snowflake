@@ -15,6 +15,7 @@ Welcome to Kedro Snowflake plugin documentation!
    Quickstart <source/03_quickstart.rst>
    Data Assets <source/04_data_assets.rst>
    Development <source/05_development.md>
+   MLflow support <source/06_mlflow.md>
 
 
 Indices and tables
