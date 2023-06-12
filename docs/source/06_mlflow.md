@@ -2,7 +2,7 @@
 
 ## High level architecture
 The key challenge is to provide access to the external service endpoints (like MLflow)
-that is currently not yet supported natively in Snowpark. Snowflake external
+that is currently not yet supported natively in Snowpark (External Access feature is on the Snowflake   roadmap). Snowflake external
 functions are the preferred workaround.
 ![MLflow and Kedro-snowflake](../images/mlflow-support.png)
 
@@ -39,4 +39,50 @@ are used for wrapping POST requests to the MLflow instance. In the minimal setup
       run_log_parameter: demo.demo.mlflow_run_log_parameter
 ```
 
-## Dedicated Kedro starter
+## Kedro starter
+The provided Kedro starter (Snowflights) has a builtin MLflow support.
+You can enable it during the project setup, i.e.:
+```bash
+TBD
+```
+
+## Deployment to Snowflake and inference
+
+### Deployment
+
+### Inference with User Defined Function (UDF)
+```sql
+select
+    MLFLOW$SNOWFLIGHTS_MODEL(
+        "engines",
+        "passenger_capacity",
+        "crew",
+        "d_check_complete",
+        "moon_clearance_complete",
+        "iata_approved",
+        "company_rating",
+        "review_scores_rating"
+    ) AS price
+from
+    (
+        select
+            1 as "engines",
+            100 as "passenger_capacity",
+            5 as "crew",
+            true as "d_check_complete",
+            true as "moon_clearance_complete",
+            true as "iata_approved",
+            10.0 as "company_rating",
+            5.0 as "review_scores_rating"
+        union all
+        select
+            2,
+            20,
+            5,
+            false,
+            false,
+            false,
+            3.0,
+            5.0
+    );
+```
