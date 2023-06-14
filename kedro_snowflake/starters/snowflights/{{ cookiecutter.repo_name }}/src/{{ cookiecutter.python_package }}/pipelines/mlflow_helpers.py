@@ -5,8 +5,6 @@ from typing import Any, Dict
 import mlflow
 import pandas as pd
 import snowflake.snowpark as sp
-from sklearn.ensemble import RandomForestRegressor
-
 from kedro_snowflake.config import SnowflakeMLflowConfig
 
 log = logging.getLogger(__name__)
@@ -20,7 +18,7 @@ def _get_mlflow_config():
     session = _get_current_session()
     # FIXME: hardcoded task name!
     json_obj = json.loads(session.sql(
-        "call system$get_predecessor_return_value('KEDRO_SNOWFLAKE_MLFLOW_START_DEFAULT_TASK')").collect()[
+        "call system$get_predecessor_return_value('KEDRO_DEMO_MLFLOW_START_TASK')").collect()[
                               0][0])
     mlflow_config = SnowflakeMLflowConfig.parse_obj(json_obj)
     return mlflow_config
@@ -73,7 +71,7 @@ def log_params(params: Dict[str, Any]):
         log_parameter(k, v)
 
 
-def log_model(model: RandomForestRegressor, X_train: pd.DataFrame, y_train: pd.Series):
+def log_model(model, x_train: pd.DataFrame, y_train: pd.Series):
     mlflow.set_tracking_uri("file:///tmp/mlruns")
     mlflow_config = _get_mlflow_config()
     local_exp_id = mlflow.create_experiment("temp")
@@ -82,9 +80,17 @@ def log_model(model: RandomForestRegressor, X_train: pd.DataFrame, y_train: pd.S
     with mlflow.start_run(run_name='local', experiment_id=local_exp_id) as run:
         local_run_id = run.info.run_id
         mlflow.sklearn.autolog()
-        model.fit(X_train, y_train)
+        model.fit(x_train, y_train)
         session = _get_current_session()
         session.file.put(f"/tmp/mlruns/{local_exp_id}/{local_run_id}/artifacts/model/*",
                          f"{mlflow_config.stage}/{exp_id}/{run_id}/artifacts/model/",
                          auto_compress=False)
         return model
+
+
+def run_update(status: str):
+    session = _get_current_session()
+    mlflow_config = _get_mlflow_config()
+    run_id = _get_run_id()
+    session.sql(
+        f"select {mlflow_config.functions.run_update}('{run_id}', '{status}')").collect()
