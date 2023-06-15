@@ -8,5 +8,7 @@
     "snowflake_warehouse": "",
     "snowflake_database": "KEDRO",
     "snowflake_schema": "PUBLIC",
-    "snowflake_password_env_variable": "SNOWFLAKE_PASSWORD"
+    "snowflake_password_env_variable": "SNOWFLAKE_PASSWORD",
+    "pipeline_name": "default",
+    "enable_mlflow_integration": false
 }

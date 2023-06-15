@@ -13,7 +13,7 @@ snowflake_account:
   text: |
     Please enter the name of your Snowflake account.
     This is the part of the URL before .snowflakecomputing.com
-  regex_validator: "^[A-Za-z0-9-]{2,}$"
+  regex_validator: "^[A-Za-z0-9-.]{2,}$"
   error_message: |
     It must contain only alphanumeric symbols and hyphens and
     be at least 2 characters long.
@@ -58,3 +58,12 @@ snowflake_password_env_variable:
   regex_validator: "^[A-Za-z0-9\\_]+$"
   error_message: |
     It must contain only alphanumeric symbols and underscores
+
+pipeline_name:
+  title: "Pipeline name used as a Snowflake task prefix"
+  regex_validator: "^[\\w-]+$"
+  error_message: |
+    It must contain only alphanumeric symbols and hyphens
+
+enable_mlflow_integration:
+  title: "Enable MLflow integration (see documentation for the configuration instructions)"
