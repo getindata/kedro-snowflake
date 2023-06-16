@@ -1,3 +1,6 @@
+{% if not cookiecutter.enable_mlflow_integration != "False" %}
+# This file is empty, because mlflow integration was turned off at starter creation
+{% else %}
 import json
 import logging
 from typing import Any, Dict
@@ -18,7 +21,7 @@ def _get_mlflow_config():
     session = _get_current_session()
     # FIXME: hardcoded task name!
     json_obj = json.loads(session.sql(
-        "call system$get_predecessor_return_value('KEDRO_DEFAULT_MLFLOW_START_TASK')").collect()[
+        f"call system$get_predecessor_return_value('KEDRO_DEFAULT_MLFLOW_START_TASK')").collect()[
                               0][0])
     mlflow_config = SnowflakeMLflowConfig.parse_obj(json_obj)
     return mlflow_config
@@ -93,4 +96,5 @@ def run_update(status: str):
     mlflow_config = _get_mlflow_config()
     run_id = _get_run_id()
     session.sql(
-        f"select {mlflow_config.functions.run_update}('{run_id}', '{status}')").collect()
+        f"select {mlflow_config.functions.run_update}('{run_id}', '{status}')").collect()    
+{% endif %}
