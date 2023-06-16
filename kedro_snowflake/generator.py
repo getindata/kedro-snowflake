@@ -184,7 +184,7 @@ call {root_sproc}();
     @property
     def _root_task_name(self):
         root_task_name = (
-            f"kedro_{self._get_pipeline_name_for_snowflake()}__start_task".upper()
+            f"kedro_{self._get_pipeline_name_for_snowflake()}_start_task".upper()
         )
         return root_task_name
 
