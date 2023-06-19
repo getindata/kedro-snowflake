@@ -15,7 +15,7 @@ pytest-mock>=1.7.1, <2.0
 pytest~=7.2
 scikit-learn~=1.0
 kedro-snowflake>=0.1.1
-{%- if cookiecutter.enable_mlflow_integration != "False" %}
+{%- if cookiecutter.enable_mlflow_integration|lower != "false" %}
 mlflow-skinny>=2.2.0
 google-cloud-storage
 {% endif %}

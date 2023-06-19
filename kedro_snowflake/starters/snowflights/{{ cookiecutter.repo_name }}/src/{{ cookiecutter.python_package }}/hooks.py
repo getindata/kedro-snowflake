@@ -3,7 +3,7 @@ from typing import Any, Dict
 from kedro.framework.hooks import hook_impl
 from kedro.pipeline.node import Node
 
-{% if cookiecutter.enable_mlflow_integration != "False" %}
+{% if cookiecutter.enable_mlflow_integration|lower != "false" %}
 from .pipelines import mlflow_helpers
 {% endif %}
 
@@ -18,7 +18,7 @@ class SnowflakeHook:
         """
         self.run_params = run_params
 
-{% if cookiecutter.enable_mlflow_integration != "False" %}
+{% if cookiecutter.enable_mlflow_integration|lower != "false" %}
     @hook_impl
     def before_node_run(self, node: Node) -> None:
         if node.name == "export_data_to_snowflake_node":

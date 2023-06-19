@@ -67,6 +67,6 @@ pipeline_name:
 
 enable_mlflow_integration:
   title: "Enable MLflow integration (see documentation for the configuration instructions)"
-  regex_validator: "^(True|False)"
+  regex_validator: "^([Tt]rue|[Ff]alse|[Yy](es))"
   error_message: |
-    Please type either 'True' or 'False'
+    Please type either 'true' or 'false'

@@ -1,8 +1,7 @@
-import os
-
-{% if not cookiecutter.enable_mlflow_integration != "False" %}
+{% if not cookiecutter.enable_mlflow_integration|lower != "false" %}
 # This file is empty, because mlflow integration was turned off at starter creation
 {% else %}
+import os
 import json
 import logging
 from typing import Any, Dict

@@ -40,7 +40,7 @@ snowflake:
       - antlr4
       - dynaconf
       - anyconfig
-      {%- if cookiecutter.enable_mlflow_integration != "False" %}
+      {%- if cookiecutter.enable_mlflow_integration|lower != "false" %}
       - mlflow
       - entrypoints
       - databricks_cli
@@ -68,13 +68,13 @@ snowflake:
       - openpyxl
       - backoff
       - pydantic
-      {%- if cookiecutter.enable_mlflow_integration != "False" %}
+      {%- if cookiecutter.enable_mlflow_integration|lower != "false" %}
       - google-cloud-storage
       {% endif %}
     # Optionally provide mapping for user-friendly pipeline names
     pipeline_name_mapping:
      __default__: {{ cookiecutter.pipeline_name | lower }}
-{%- if cookiecutter.enable_mlflow_integration != "False" %}
+{%- if cookiecutter.enable_mlflow_integration|lower != "false" %}
 # EXPERIMENTAL: Either MLflow experiment name to enable MLflow tracking
 # or leave empty
   mlflow:
