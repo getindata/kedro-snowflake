@@ -40,7 +40,7 @@ For detailed documentation refer to https://kedro-snowflake.readthedocs.io/
     <details>
         <summary>And answer the interactive prompts ⬇️ (click to expand) </summary>
     
-    ```bash
+    ```
     Project Name
     ============
     Please enter a human readable name for your new project.
