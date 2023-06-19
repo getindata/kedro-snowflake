@@ -66,22 +66,32 @@ For detailed documentation refer to https://kedro-snowflake.readthedocs.io/
     Snowflake Database
     ==================
     Please enter the name of your Snowflake database.
-     [KEDRO]: 
+     [DEMO]: 
     
     Snowflake Schema
     ================
     Please enter the name of your Snowflake schema.
-     [PUBLIC]: 
+     [DEMO]: 
     
     Snowflake Password Environment Variable
     =======================================
     Please enter the name of the environment variable that contains your Snowflake password.
-    Alternatively, you can re-configure the plugin later to use Kedro's credentials.yml
+    Alternatively, you can re-configure the plugin later to use Kedros credentials.yml
      [SNOWFLAKE_PASSWORD]:       
     
+    Pipeline Name Used As A Snowflake Task Prefix
+    =============================================
+
+     [default]:
+
+    Enable Mlflow Integration (See Documentation For The Configuration Instructions)
+    ================================================================================
+
+     [False]: 
+
     The project name 'Snowflights' has been applied to: 
-    - The project title in /tmp/snowflights/README.md 
-    - The folder created for your project in /tmp/snowflights 
+    - The project title in /tmp/snowflights/README.md
+    - The folder created for your project in /tmp/snowflights
     - The project's python package in /tmp/snowflights/src/snowflights
     ```
     </details>

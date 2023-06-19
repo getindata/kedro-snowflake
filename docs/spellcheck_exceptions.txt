@@ -106,3 +106,7 @@ ly
 svg
 MLOps
 natively
+analytics
+Snowpark
+Snowflights
+Kedro's

@@ -4,7 +4,7 @@
 
 * Python 3.8 is a must ⚠️ - this is enforced by the `snowflake-snowpark-python` package. Refer to [Snowflake documentation](https://docs.snowflake.com/en/developer-guide/snowpark/python/setup) for more details. 
 * A tool to manage Python virtual environments (e.g. venv, conda, virtualenv). Anaconda is recommended by Snowflake.
-* Kedro is fixed for now at version `<0.18.9` due to dataset errors in later versions.
+* Kedro is fixed for now at version `<0.18.9` due to data set errors that appear in later versions.
 
 ## Plugin installation
 
