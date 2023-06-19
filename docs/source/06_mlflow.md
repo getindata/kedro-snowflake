@@ -43,7 +43,11 @@ are used for wrapping POST requests to the MLflow instance. In the minimal setup
 The provided Kedro starter (Snowflights) has a builtin MLflow support.
 You can enable it during the project setup, i.e.:
 ```bash
-TBD
+    Enable Mlflow Integration (See Documentation For The Configuration Instructions)
+    ================================================================================
+
+     [False]: True
+
 ```
 
 ## Deployment to Snowflake and inference
