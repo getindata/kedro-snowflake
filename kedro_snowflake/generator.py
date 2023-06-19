@@ -434,7 +434,7 @@ call {root_sproc}();
 
             if is_mlflow_enabled:
                 mlflow_config = session.sql(
-                    f"system$get_predecessor_return_value('{mlflow_sproc_name}')"
+                    f"call system$get_predecessor_return_value('{mlflow_sproc_name}')"
                 ).collect()[0][0]
                 os.environ["SNOWFLAKE_MLFLOW_CONFIG"] = mlflow_config
 
