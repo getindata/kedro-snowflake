@@ -131,7 +131,7 @@ call {root_sproc}();
 """.strip().format(
             task_name=self._mlflow_root_task_name,
             warehouse=self.connection_parameters["warehouse"],
-            root_sproc=self._mlfow_root_sproc_name,
+            root_sproc=self._mlflow_root_sproc_name,
             after_task=self._root_task_name,
         )
 
@@ -200,7 +200,7 @@ call {root_sproc}();
         return f"kedro_{self._get_pipeline_name_for_snowflake()}_start".upper()
 
     @property
-    def _mlfow_root_sproc_name(self):
+    def _mlflow_root_sproc_name(self):
         return f"kedro_{self._get_pipeline_name_for_snowflake()}_start_mlflow".upper()
 
     def generate(self) -> KedroSnowflakePipeline:
@@ -362,7 +362,7 @@ call {root_sproc}();
 
         return sproc(
             func=mlflow_start_run,
-            name=self._mlfow_root_sproc_name,
+            name=self._mlflow_root_sproc_name,
             is_permanent=True,
             replace=True,
             stage_location=stage_location,
