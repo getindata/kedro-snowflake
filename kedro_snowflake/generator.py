@@ -401,7 +401,7 @@ call {root_sproc}();
         # and return it
 
         project_name = Path.cwd().name
-        mlflow_sproc_name = self._mlfow_root_sproc_name
+        mlflow_task_name = self._mlflow_root_task_name
         is_mlflow_enabled = self.mlflow_enabled
 
         def kedro_sproc_executor(
@@ -434,7 +434,7 @@ call {root_sproc}();
 
             if is_mlflow_enabled:
                 mlflow_config = session.sql(
-                    f"call system$get_predecessor_return_value('{mlflow_sproc_name}')"
+                    f"call system$get_predecessor_return_value('{mlflow_task_name}')"
                 ).collect()[0][0]
                 os.environ["SNOWFLAKE_MLFLOW_CONFIG"] = mlflow_config
 
