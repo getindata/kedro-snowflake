@@ -1,3 +1,5 @@
+import os
+
 {% if not cookiecutter.enable_mlflow_integration != "False" %}
 # This file is empty, because mlflow integration was turned off at starter creation
 {% else %}
@@ -18,11 +20,7 @@ def _get_current_session():
 
 
 def _get_mlflow_config():
-    session = _get_current_session()
-    # FIXME: hardcoded task name!
-    json_obj = json.loads(session.sql(
-        f"call system$get_predecessor_return_value('KEDRO_DEFAULT_MLFLOW_START_TASK')").collect()[
-                              0][0])
+    json_obj = json.loads(os.environ.get("SNOWFLAKE_MLFLOW_CONFIG"))
     mlflow_config = SnowflakeMLflowConfig.parse_obj(json_obj)
     return mlflow_config
 

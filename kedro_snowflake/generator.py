@@ -401,6 +401,8 @@ call {root_sproc}();
         # and return it
 
         project_name = Path.cwd().name
+        mlflow_sproc_name = self._mlfow_root_sproc_name
+        is_mlflow_enabled = self.mlflow_enabled
 
         def kedro_sproc_executor(
             session: Session,
@@ -429,6 +431,12 @@ call {root_sproc}();
                 "node_names": node_names,
                 "extra_params_json": extra_params_json,
             }
+
+            if is_mlflow_enabled:
+                mlflow_config = session.sql(
+                    f"system$get_predecessor_return_value('{mlflow_sproc_name}')"
+                ).collect()[0][0]
+                os.environ["SNOWFLAKE_MLFLOW_CONFIG"] = mlflow_config
 
             def extract_tar_zstd(input_path, output_path):
                 with zstd.open(input_path, "rb") as archive:

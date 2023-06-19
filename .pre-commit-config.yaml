@@ -4,6 +4,7 @@ repos:
   hooks:
   - id: isort
     args: ["--profile", "black", "--line-length=79"]
+    exclude: "kedro_snowflake/starters"
 - repo: https://github.com/psf/black
   rev: 22.3.0
   hooks:
