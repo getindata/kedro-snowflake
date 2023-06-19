@@ -52,6 +52,8 @@ You can enable it during the project setup, i.e.:
 
 ## Deployment to Snowflake and inference
 
+You can find instructions on how to make `mlflow-snowflake` integration here: https://github.com/Snowflake-Labs/mlflow-snowflake
+
 ### Deployment
 
 ### Inference with User Defined Function (UDF)
