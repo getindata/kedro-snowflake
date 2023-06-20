@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+-   📝 Update quickstart guide
 
 -   Added MlFlow integration support
 -   Added pipeline names parameter for naming pipelines in snowflake

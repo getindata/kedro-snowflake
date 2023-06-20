@@ -6,6 +6,7 @@
 * A tool to manage Python virtual environments (e.g. venv, conda, virtualenv). Anaconda is recommended by Snowflake.
 * Kedro is fixed for now at version `<0.18.9` due to data set errors that appear in later versions.
 
+
 ## Plugin installation
 
 ### Install from PyPI
