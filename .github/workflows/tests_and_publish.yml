@@ -84,6 +84,8 @@ jobs:
         snowflake_database: "KEDRO"
         snowflake_schema: "PUBLIC"
         snowflake_password_env_variable: "ENV_WITH_PASSWORD"
+        pipeline_name: "default"
+        enable_mlflow_integration: "false"
         EOF
         kedro new --starter=snowflights --checkout=develop --verbose --config=prompts.yml
         test -f snowflights/conf/base/snowflake.yml
