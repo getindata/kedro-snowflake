@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kedro-snowflake"
-version = "0.1.2"
+version = "0.2.0"
 description = "Kedro plugin with Snowflake / Snowpark support"
 readme = "README.md"
 authors = ['GetInData MLOPS <mlops@getindata.com>']
@@ -33,7 +33,8 @@ known_third_party = ["pydantic","semver","setuptools"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.9"
-kedro = ">=0.18.7,<0.19"
+# Fixing kedro version because of problems in the snowflake datasets at kedro >= 0.18.9
+kedro = ">=0.18.7,<=0.18.8"
 snowflake-snowpark-python = {version = ">=1.0.0,<1.1.0", extras = ["pandas"]}
 backoff = "^2.2.1"
 cloudpickle = ">=1.6.0,<=2.0.0"

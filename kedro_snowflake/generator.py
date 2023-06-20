@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import re
@@ -59,6 +60,12 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{root_ta
         self.config = config
         self.pipeline_name = pipeline_name
         self.extra_env = extra_env
+        self.mlflow_enabled = (
+            True
+            if self.config.snowflake.mlflow
+            and self.config.snowflake.mlflow.experiment_name
+            else False
+        )
 
     def _get_pipeline_name_for_snowflake(self):
         return (self.config.snowflake.runtime.pipeline_name_mapping or {}).get(
@@ -78,7 +85,9 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{root_ta
             warehouse=self.connection_parameters["warehouse"],
             after_tasks=",".join(after_tasks),
             task_body=self.TASK_BODY_TEMPLATE.format(
-                root_task_name=self._root_task_name,
+                root_task_name=self._root_task_name
+                if not self.mlflow_enabled
+                else self._mlflow_root_task_name,
                 environment=self.kedro_environment,
                 sproc_name=self.SPROC_NAME,
                 pipeline_name=pipeline_name,
@@ -101,31 +110,71 @@ call {root_sproc}();
             schedule=self.config.snowflake.runtime.schedule,
         )
 
-    def _sanitize_node_name(self, node_name: str) -> str:
-        return re.sub(r"\W", "_", node_name)
+    def _generate_root_task_suspend_sql(self):
+        return """
+alter task {task_name} suspend;
+        """.strip().format(
+            task_name=self._root_task_name
+        )
+
+    def _generate_mlflow_drop_task_sql(self):
+        return """
+drop task if exists {task_name};
+        """.strip().format(
+            task_name=self._mlflow_root_task_name
+        )
+
+    def _generate_mlflow_root_task_sql(self):
+        return """
+create or replace task {task_name}
+warehouse = '{warehouse}'
+after {after_task}
+as
+call {root_sproc}();
+""".strip().format(
+            task_name=self._mlflow_root_task_name,
+            warehouse=self.connection_parameters["warehouse"],
+            root_sproc=self._mlflow_root_sproc_name,
+            after_task=self._root_task_name,
+        )
+
+    def _standardize_node_name(self, node_name: str) -> str:
+        sanity_node_name = re.sub(r"\W", "_", node_name)
+        return f"kedro_{self._get_pipeline_name_for_snowflake()}_{sanity_node_name}"
 
     def _generate_snowflake_tasks_sql(
         self,
         pipeline: Pipeline,
     ) -> List[str]:
-        sql_statements = [self._generate_root_task_sql()]
+        sql_statements = [
+            self._generate_root_task_sql(),
+            self._generate_root_task_suspend_sql(),
+        ]
+        if self.mlflow_enabled:
+            sql_statements.append(self._generate_mlflow_root_task_sql())
+        else:
+            sql_statements.append(self._generate_mlflow_drop_task_sql())
 
         node_dependencies = (
             pipeline.node_dependencies
         )  # <-- this one is not topological
         for node in pipeline.nodes:  # <-- this one is topological
             after_tasks = [self._root_task_name] + [
-                self._sanitize_node_name(n.name) for n in node_dependencies[node]
+                f"{self._standardize_node_name(n.name)}"
+                for n in node_dependencies[node]
             ]
+            if self.mlflow_enabled:
+                after_tasks.append(self._mlflow_root_task_name)
             sql_statements.append(
                 self._generate_task_sql(
-                    self._sanitize_node_name(node.name),
+                    self._standardize_node_name(node.name),
                     after_tasks,
                     self.pipeline_name,
                     [node.name],
                     self.extra_params,
                 )
             )
+
         return sql_statements
 
     def _generate_task_execute_sql(self):
@@ -137,14 +186,25 @@ call {root_sproc}();
 
     @property
     def _root_task_name(self):
-        root_task_name = f"kedro_snowflake_start_{self._get_pipeline_name_for_snowflake()}_task".upper()
+        root_task_name = (
+            f"kedro_{self._get_pipeline_name_for_snowflake()}_start_task".upper()
+        )
         return root_task_name
 
     @property
-    def _root_sproc_name(self):
-        return (
-            f"kedro_snowflake_start_{self._get_pipeline_name_for_snowflake()}".upper()
+    def _mlflow_root_task_name(self):
+        mlflow_root_task_name = (
+            f"kedro_{self._get_pipeline_name_for_snowflake()}_mlflow_start_task".upper()
         )
+        return mlflow_root_task_name
+
+    @property
+    def _root_sproc_name(self):
+        return f"kedro_{self._get_pipeline_name_for_snowflake()}_start".upper()
+
+    @property
+    def _mlflow_root_sproc_name(self):
+        return f"kedro_{self._get_pipeline_name_for_snowflake()}_start_mlflow".upper()
 
     def generate(self) -> KedroSnowflakePipeline:
         """Generate a SnowflakePipeline object from a Kedro pipeline.
@@ -202,6 +262,13 @@ call {root_sproc}();
                 snowflake_stage_name
             )
 
+            if self.mlflow_enabled:
+                mlflow_root_sproc = (  # noqa: F841
+                    self._construct_kedro_snowflake_mlflow_root_sproc(
+                        snowflake_stage_name
+                    )
+                )
+
             logger.info("Creating Kedro Snowflake Sproc")
             snowflake_sproc = self._construct_kedro_snowflake_sproc(
                 imports=self._generate_imports_for_sproc(
@@ -219,7 +286,7 @@ call {root_sproc}();
                 pipeline_sql_statements,
                 self._generate_task_execute_sql(),
                 self._root_task_name,
-                [self._sanitize_node_name(n.name) for n in pipeline.nodes],
+                [self._standardize_node_name(n.name) for n in pipeline.nodes],
             )
 
     def _generate_imports_for_sproc(self, dependencies_dir, snowflake_stage_name):
@@ -270,6 +337,43 @@ call {root_sproc}();
     def snowflake_session(self):
         return Session.builder.configs(self.connection_parameters).create()
 
+    def _construct_kedro_snowflake_mlflow_root_sproc(self, stage_location: str):
+        experiment_name = self.config.snowflake.mlflow.experiment_name
+        experiment_get_by_name_func = (
+            self.config.snowflake.mlflow.functions.experiment_get_by_name
+        )
+        run_create_func = self.config.snowflake.mlflow.functions.run_create
+        experiment_id = (
+            self.snowflake_session.sql(
+                f"SELECT {experiment_get_by_name_func}('{experiment_name}'):body.experiments[0].experiment_id"
+            ).collect()[0][0]
+        ).strip(" \"'\t\r\n")
+        mlflow_config = self.config.snowflake.mlflow.dict()
+
+        def mlflow_start_run(session: Session) -> str:
+            run_id = (
+                session.sql(
+                    f"SELECT {run_create_func}({experiment_id}):body.run.info.run_id"
+                ).collect()[0][0]
+            ).strip(" \"'\t\r\n")
+            mlflow_config["run_id"] = run_id
+            mlflow_config_json = json.dumps(mlflow_config)
+            session.sql(
+                f"call system$set_return_value('{mlflow_config_json}');"
+            ).collect()
+            return run_id
+
+        return sproc(
+            func=mlflow_start_run,
+            name=self._mlflow_root_sproc_name,
+            is_permanent=True,
+            replace=True,
+            stage_location=stage_location,
+            packages=["snowflake-snowpark-python"],
+            execute_as="caller",
+            session=self.snowflake_session,
+        )
+
     def _construct_kedro_snowflake_root_sproc(self, stage_location: str):
         def kedro_start_run(session: Session) -> str:
             from uuid import uuid4
@@ -300,6 +404,8 @@ call {root_sproc}();
         # and return it
 
         project_name = Path.cwd().name
+        mlflow_task_name = self._mlflow_root_task_name
+        is_mlflow_enabled = self.mlflow_enabled
 
         def kedro_sproc_executor(
             session: Session,
@@ -328,6 +434,12 @@ call {root_sproc}();
                 "node_names": node_names,
                 "extra_params_json": extra_params_json,
             }
+
+            if is_mlflow_enabled:
+                mlflow_config = session.sql(
+                    f"call system$get_predecessor_return_value('{mlflow_task_name}')"
+                ).collect()[0][0]
+                os.environ["SNOWFLAKE_MLFLOW_CONFIG"] = mlflow_config
 
             def extract_tar_zstd(input_path, output_path):
                 with zstd.open(input_path, "rb") as archive:

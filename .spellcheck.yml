@@ -18,11 +18,13 @@ matrix:
             # ```
             # content
             # ```
-            - open: '^(?s)(?P<open>`{1,3})[^`]'
-              close: '(?P=open)'
+            - open: '(?s)^[ \t]*(?P<open>`{1,3})[^`]'
+              close: '^[ \t]*(?P=open)'
             # Ignore text between inline back ticks
             - open: '(?P<open>`)[^`]'
               close: '(?P=open)'
+            - open: '\<'
+              close: '\>'
             # Ignore text in brackets [] and ()
             - open: '\['
               close: '\]'

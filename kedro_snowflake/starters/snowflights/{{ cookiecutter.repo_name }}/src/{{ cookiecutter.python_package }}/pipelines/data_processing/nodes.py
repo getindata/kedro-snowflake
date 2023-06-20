@@ -62,7 +62,7 @@ def preprocess_shuttles(shuttles: pd.DataFrame) -> pd.DataFrame:
 
 
 def create_model_input_table(
-    shuttles: pd.DataFrame, companies: pd.DataFrame, reviews: pd.DataFrame
+    shuttles: pd.DataFrame, companies: sp.DataFrame, reviews: pd.DataFrame
 ) -> pd.DataFrame:
     """Combines all data to create a model input table.
 

@@ -60,12 +60,12 @@ You will also need:
     Snowflake Database
     ==================
     Please enter the name of your Snowflake database.
-     [KEDRO]:
+     [DEMO]:
 
     Snowflake Schema
     ================
     Please enter the name of your Snowflake schema.
-     [PUBLIC]:
+     [DEMO]:
 
     Snowflake Password Environment Variable
     =======================================
@@ -73,11 +73,25 @@ You will also need:
     Alternatively, you can re-configure the plugin later to use Kedro's credentials.yml
      [SNOWFLAKE_PASSWORD]:
 
+    Pipeline Name Used As A Snowflake Task Prefix
+    =============================================
+
+     [default]:
+
+    Enable Mlflow Integration (See Documentation For The Configuration Instructions)
+    ================================================================================
+
+     [False]: 
+
+
     The project name 'Snowflights' has been applied to:
     - The project title in /tmp/snowflights/README.md
     - The folder created for your project in /tmp/snowflights
     - The project's python package in /tmp/snowflights/src/snowflights
 
+Pipeline name parameter is here to allow you run many pipelines in the same database in snowflake and avoid conflicts between them. For demo it's fine to leave it as default.
+
+Leave the mlflow integration disabled for now. More instructions on how to get the integration to work will available later in a blog post.
 
 4. The ``Snowflake Password Environment Variable`` is the name of the environment variable that contains your Snowflake password. Make sure to set in in your current terminal session. Alternatively, you can re-configure the plugin later to use Kedro's credentials.yml.
    For example (using env var):
@@ -112,7 +126,8 @@ In Snowpark, you can also see the history of the tasks execution:
 -------
 
 Advanced configuration
-------------------
+----------------------------
+
 This plugin uses `*snowflake.yml` configuration file in standard Kedro's config directory to handle all its configuration.
 Follow the comments in the example config, to understand the meaning of each field and modify them as you see fit.
 

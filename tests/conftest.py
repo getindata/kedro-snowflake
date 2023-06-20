@@ -7,8 +7,10 @@ from pytest import fixture
 from kedro_snowflake.config import (
     DependenciesConfig,
     KedroSnowflakeConfig,
+    MLflowFunctionsConfig,
     SnowflakeConfig,
     SnowflakeConnectionConfig,
+    SnowflakeMLflowConfig,
     SnowflakeRuntimeConfig,
 )
 from kedro_snowflake.generator import SnowflakePipelineGenerator
@@ -47,6 +49,7 @@ def mock_plugin_config():
                 schema="test_schema",
             ),
             runtime=SnowflakeRuntimeConfig(dependencies=DependenciesConfig()),
+            mlflow=SnowflakeMLflowConfig(functions=MLflowFunctionsConfig()),
         )
     )
 
