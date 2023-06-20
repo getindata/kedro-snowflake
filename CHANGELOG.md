@@ -3,6 +3,10 @@
 ## [Unreleased]
 -   📝 Update quickstart guide
 
+-   Added MlFlow integration support
+-   Added pipeline names parameter for naming pipelines in snowflake
+-   Updated quickstart docs
+
 ## [0.1.2] - 2023-05-05
 
 -   Update quickstart guide

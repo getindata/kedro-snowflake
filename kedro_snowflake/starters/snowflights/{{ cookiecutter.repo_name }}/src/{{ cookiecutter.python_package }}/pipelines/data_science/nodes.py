@@ -6,6 +6,9 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
+{% if cookiecutter.enable_mlflow_integration|lower != "false" %}
+from .. import mlflow_helpers
+{% endif %}
 
 def split_data(data: pd.DataFrame, parameters: Dict) -> Tuple:
     """Splits data into features and targets training and test sets.
@@ -37,8 +40,7 @@ def train_model(
         Trained model.
     """
     regressor = RandomForestRegressor(random_state=parameters["random_state"])
-    regressor.fit(X_train, y_train)
-    return regressor
+    return mlflow_helpers.log_model(regressor, X_train, y_train)
 
 
 def evaluate_model(
@@ -55,3 +57,17 @@ def evaluate_model(
     score = r2_score(y_test, y_pred)
     logger = logging.getLogger(__name__)
     logger.info("Model has a coefficient R^2 of %.3f on test data.", score)
+
+{% if cookiecutter.enable_mlflow_integration|lower != "false" %}
+    mlflow_helpers.log_metric("r2", score)
+    mlflow_helpers.log_parameter("snowflake_warehouse",
+                                 mlflow_helpers.get_current_warehouse())
+    mlflow_helpers.log_parameter("snowflake_account",
+                                 mlflow_helpers.get_snowflake_account())
+{% else %}
+    # mlflow_helpers.log_metric("r2", score)
+    # mlflow_helpers.log_parameter("snowflake_warehouse",
+    #                              mlflow_helpers.get_current_warehouse())
+    # mlflow_helpers.log_parameter("snowflake_account",
+    #                              mlflow_helpers.get_snowflake_account())
+{% endif %}

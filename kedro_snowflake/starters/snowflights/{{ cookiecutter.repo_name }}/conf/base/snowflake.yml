@@ -40,6 +40,13 @@ snowflake:
       - antlr4
       - dynaconf
       - anyconfig
+      {%- if cookiecutter.enable_mlflow_integration|lower != "false" %}
+      - mlflow
+      - entrypoints
+      - databricks_cli
+      - sqlparse
+      - importlib_metadata
+      {% endif %}
       # packages use official Snowflake's Conda Channel
       # https://repo.anaconda.com/pkgs/snowflake/
       packages:
@@ -60,6 +67,24 @@ snowflake:
       - more-itertools
       - openpyxl
       - backoff
+      - pydantic
+      {%- if cookiecutter.enable_mlflow_integration|lower != "false" %}
+      - google-cloud-storage
+      {% endif %}
     # Optionally provide mapping for user-friendly pipeline names
     pipeline_name_mapping:
-     __default__: default
+     __default__: {{ cookiecutter.pipeline_name | lower }}
+{%- if cookiecutter.enable_mlflow_integration|lower != "false" %}
+# EXPERIMENTAL: Either MLflow experiment name to enable MLflow tracking
+# or leave empty
+  mlflow:
+    experiment_name: Default
+    stage: "@MLFLOW_STAGE"
+    # Snowflake external functions needed for calling MLflow instance
+    functions:
+      experiment_get_by_name: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_experiment_get_by_name
+      run_create: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_run_create
+      run_update: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_run_update
+      run_log_metric: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_run_log_metric
+      run_log_parameter: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_run_log_parameter
+{% endif %}
