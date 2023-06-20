@@ -19,8 +19,17 @@ def _get_current_session():
 
 
 def _get_mlflow_config():
-    json_obj = json.loads(os.environ.get("SNOWFLAKE_MLFLOW_CONFIG"))
-    mlflow_config = SnowflakeMLflowConfig.parse_obj(json_obj)
+    def error_out():
+        log.error("""SNOWFLAKE_MLFLOW_CONFIG environment variable not valid. 
+Seems like something went wrong or you tried to run the mlflow-integration enabled snowflights starter pipeline locally, which is currently not supported, as mlflow_helpers functions are made for snowflake-mlflow integration.""")
+        exit(1)
+    try:
+        json_obj = json.loads(os.environ.get("SNOWFLAKE_MLFLOW_CONFIG"))
+        mlflow_config = SnowflakeMLflowConfig.parse_obj(json_obj)
+    except TypeError:
+        error_out()
+    except json.JSONDecodeError:
+        error_out()
     return mlflow_config
 
 
