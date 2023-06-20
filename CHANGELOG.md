@@ -1,10 +1,15 @@
 # Changelog
 
 ## [Unreleased]
+
+## [0.2.0] - 2023-06-20
+
 -   📝 Update quickstart guide
 
 -   Added MlFlow integration support
+
 -   Added pipeline names parameter for naming pipelines in snowflake
+
 -   Updated quickstart docs
 
 ## [0.1.2] - 2023-05-05
@@ -24,7 +29,9 @@
 
 -   Project seed prepared
 
-[Unreleased]: https://github.com/getindata/kedro-snowflake/compare/0.1.2...HEAD
+[Unreleased]: https://github.com/getindata/kedro-snowflake/compare/0.2.0...HEAD
+
+[0.2.0]: https://github.com/getindata/kedro-snowflake/compare/0.1.2...0.2.0
 
 [0.1.2]: https://github.com/getindata/kedro-snowflake/compare/0.1.1...0.1.2
 
