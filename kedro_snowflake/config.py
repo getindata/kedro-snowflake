@@ -99,7 +99,7 @@ class SnowflakeMLflowConfig(BaseModel):
 class SnowflakeConfig(BaseModel):
     connection: SnowflakeConnectionConfig
     runtime: SnowflakeRuntimeConfig
-    mlflow: SnowflakeMLflowConfig
+    mlflow: Optional[SnowflakeMLflowConfig]
 
 
 class KedroSnowflakeConfig(BaseModel):
@@ -176,16 +176,16 @@ snowflake:
      __default__: default
   # EXPERIMENTAL: Either MLflow experiment name to enable MLflow tracking
   # or leave empty
-  mlflow:
-    experiment_name: ~
-    stage: ~
+#   mlflow:
+#     experiment_name: ~
+#     stage: ~
     # Snowflake external functions needed for calling MLflow instance
-    functions:
-        experiment_get_by_name: mlflow_experiment_get_by_name
-        run_create: mlflow_run_create
-        run_update: mlflow_run_update
-        run_log_metric: mlflow_run_log_metric
-        run_log_parameter: mlflow_run_log_parameter
+#     functions:
+#         experiment_get_by_name: mlflow_experiment_get_by_name
+#         run_create: mlflow_run_create
+#         run_update: mlflow_run_update
+#         run_log_metric: mlflow_run_log_metric
+#         run_log_parameter: mlflow_run_log_parameter
 """.strip()
 
 # This auto-validates the template above during import

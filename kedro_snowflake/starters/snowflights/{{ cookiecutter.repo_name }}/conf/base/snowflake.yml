@@ -87,4 +87,17 @@ snowflake:
       run_update: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_run_update
       run_log_metric: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_run_log_metric
       run_log_parameter: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_run_log_parameter
+{% else %}
+# EXPERIMENTAL: Either MLflow experiment name to enable MLflow tracking
+# or leave empty
+  # mlflow:
+  #   experiment_name: Default
+  #   stage: "@MLFLOW_STAGE"
+      # Snowflake external functions needed for calling MLflow instance
+  #   functions:
+  #     experiment_get_by_name: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_experiment_get_by_name
+  #     run_create: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_run_create
+  #     run_update: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_run_update
+  #     run_log_metric: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_run_log_metric
+  #     run_log_parameter: {{ cookiecutter.snowflake_database | lower }}.{{ cookiecutter.snowflake_schema | lower }}.mlflow_run_log_parameter
 {% endif %}

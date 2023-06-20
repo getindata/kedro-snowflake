@@ -19,8 +19,17 @@ def _get_current_session():
 
 
 def _get_mlflow_config():
-    json_obj = json.loads(os.environ.get("SNOWFLAKE_MLFLOW_CONFIG"))
-    mlflow_config = SnowflakeMLflowConfig.parse_obj(json_obj)
+    def error_out():
+        log.error("""SNOWFLAKE_MLFLOW_CONFIG environment variable not valid. 
+Seems like something went wrong or you tried to run the mlflow-integration enabled snowflights starter pipeline locally, which is currently not supported, as mlflow_helpers functions are made for snowflake-mlflow integration.""")
+        exit(1)
+    try:
+        json_obj = json.loads(os.environ.get("SNOWFLAKE_MLFLOW_CONFIG"))
+        mlflow_config = SnowflakeMLflowConfig.parse_obj(json_obj)
+    except TypeError:
+        error_out()
+    except json.JSONDecodeError:
+        error_out()
     return mlflow_config
 
 
@@ -70,22 +79,29 @@ def log_params(params: Dict[str, Any]):
     for k, v in params.items():
         log_parameter(k, v)
 
+class ModelLoggingContext():
+    def __init__(self):
+        mlflow.set_tracking_uri("file:///tmp/mlruns")
+        self.mlflow_config = _get_mlflow_config()
+        self.exp_id = _get_experiment_id()
+        self.run_id = _get_run_id()
 
-def log_model(model, x_train: pd.DataFrame, y_train: pd.Series):
-    mlflow.set_tracking_uri("file:///tmp/mlruns")
-    mlflow_config = _get_mlflow_config()
-    local_exp_id = mlflow.create_experiment("temp")
-    exp_id = _get_experiment_id()
-    run_id = _get_run_id()
-    with mlflow.start_run(run_name='local', experiment_id=local_exp_id) as run:
-        local_run_id = run.info.run_id
+    def __enter__(self):
+        self.local_exp_id = mlflow.create_experiment("temp")
+        self.mlflow_run = mlflow.start_run(run_name='local', experiment_id=self.local_exp_id).__enter__()
+        self.local_run_id = self.mlflow_run.info.run_id
         mlflow.sklearn.autolog()
-        model.fit(x_train, y_train)
+        return self
+
+    def __exit__(self, exc_type, exc, exc_tb):
         session = _get_current_session()
-        session.file.put(f"/tmp/mlruns/{local_exp_id}/{local_run_id}/artifacts/model/*",
-                         f"{mlflow_config.stage}/{exp_id}/{run_id}/artifacts/model/",
-                         auto_compress=False)
-        return model
+        session.file.put(f"/tmp/mlruns/{self.local_exp_id}/{self.local_run_id}/artifacts/model/*",
+                        f"{self.mlflow_config.stage}/{self.exp_id}/{self.run_id}/artifacts/model/",
+                        auto_compress=False)
+        self.mlflow_run.__exit__(exc_type, exc, exc_tb)
+
+def log_model() -> ModelLoggingContext:
+    return ModelLoggingContext()
 
 
 def run_update(status: str):
