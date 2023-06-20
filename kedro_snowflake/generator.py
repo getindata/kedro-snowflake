@@ -61,7 +61,10 @@ call {sproc_name}('{environment}', system$get_predecessor_return_value('{root_ta
         self.pipeline_name = pipeline_name
         self.extra_env = extra_env
         self.mlflow_enabled = (
-            True if self.config.snowflake.mlflow.experiment_name else False
+            True
+            if self.config.snowflake.mlflow
+            and self.config.snowflake.mlflow.experiment_name
+            else False
         )
 
     def _get_pipeline_name_for_snowflake(self):
