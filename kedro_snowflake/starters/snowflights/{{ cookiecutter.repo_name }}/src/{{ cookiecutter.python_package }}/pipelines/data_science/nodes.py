@@ -40,7 +40,13 @@ def train_model(
         Trained model.
     """
     regressor = RandomForestRegressor(random_state=parameters["random_state"])
-    return mlflow_helpers.log_model(regressor, X_train, y_train)
+{% if cookiecutter.enable_mlflow_integration|lower != "false" %}
+    with mlflow_helpers.log_model() as run:
+        regressor.fit(X_train, y_train)
+{% else %}
+    regressor.fit(X_train, y_train)
+{% endif %}
+    return regressor
 
 
 def evaluate_model(
@@ -64,10 +70,4 @@ def evaluate_model(
                                  mlflow_helpers.get_current_warehouse())
     mlflow_helpers.log_parameter("snowflake_account",
                                  mlflow_helpers.get_snowflake_account())
-{% else %}
-    # mlflow_helpers.log_metric("r2", score)
-    # mlflow_helpers.log_parameter("snowflake_warehouse",
-    #                              mlflow_helpers.get_current_warehouse())
-    # mlflow_helpers.log_parameter("snowflake_account",
-    #                              mlflow_helpers.get_snowflake_account())
 {% endif %}
