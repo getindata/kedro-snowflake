@@ -15,6 +15,7 @@ You will also need:
 
 * Python 3.8 (must-have ⚠️ - this is enforced by the `snowflake-snowpark-python` package. Refer to `Snowflake documentation <https://docs.snowflake.com/en/developer-guide/snowpark/python/setup>`__ for more details.
 * A tool to manage Python virtual environments (e.g. venv, conda, virtualenv). Anaconda is recommended by Snowflake.
+* Make sure that you have enabled Anacoda's third party packages in snowflake. You can find this in Snowflake > Admin > Billing & Terms > Anaconda > Enable.
 
 -------
 

@@ -23,8 +23,7 @@ This plugin allows to run full Kedro pipelines in Snowflake. Right now it suppor
 * running Kedro pipeline fully within Snowflake, without external system
 * using Kedro's official `SnowparkTableDataSet`
 * automatically storing intermediate data as Transient Tables (if Snowpark's DataFrames are used)
-* <span style="color:yellow;float:left;margin: 0px 7px 0px 0px">**(New!)</span>** [MLflow](https://mlflow.org/) integration with Snowflake with example usage in _Snowflights_ Kedro starter
-
+* <span style="color:yellow;float:left;margin: 0px 7px 0px 0px">**(New!)</span></span>** [MLflow](https://mlflow.org/) integration with Snowflake with examples in _Snowflights_ Kedro starter
 
 ## Documentation
 For detailed documentation refer to https://kedro-snowflake.readthedocs.io/
